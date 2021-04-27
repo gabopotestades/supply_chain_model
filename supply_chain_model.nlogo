@@ -1,7 +1,7 @@
 ; Initialize the breeds
 breed [patients patient]
 breed [hospitals hospital]
-breed [transporters trucks]
+breed [transporters truck]
 breed [manufacturers factory]
 breed [extractors extractor]
 
@@ -50,7 +50,7 @@ to setup
   create-manufacturers 2
   create-extractors 2
   create-hospitals 2
-  create-patients 100
+  ; create-patients 100
 
   ask transporters [
     set size  3
@@ -63,8 +63,9 @@ to setup
   ]
 
   ask extractors [
-    set size 5
+    set size 7
     set color yellow
+    set heading 0
   ]
 
   ask hospitals [
@@ -77,17 +78,90 @@ to setup
     set color white
   ]
 
+  setup-positions
+
+end
+
+; Places each non-moving breed in the grid
+to setup-positions
+
+  ; Hospitals
+  let n 9
+  foreach sort hospitals [ h ->
+   ask h [
+      setxy 20 n
+      set n (n - 18)
+      display
+    ]
+  ]
+
+  ; Manufacturers
+  set n 9
+  foreach sort manufacturers [ m ->
+   ask m [
+      setxy -3 n
+      set n (n - 18)
+      display
+    ]
+  ]
+
+  ; Extractors
+  set n 14
+  foreach sort extractors [ ex ->
+   ask ex [
+      setxy -26 n
+      set n (n - 28)
+      display
+    ]
+  ]
+
+  ; Transporters
+  let x 0
+  let y 0
+  set n 0
+  foreach sort transporters [ tr ->
+   ask tr [
+
+      (ifelse
+        n >= 0 and n < 2 [
+          ask truck n [
+            setxy -8 5
+          ]
+        ]
+        n >= 2 and n < 4 [
+          ask truck n [
+            setxy -8 -13
+          ]
+        ]
+        n >= 4 and n < 6  [
+          ask truck n [
+            setxy 2 5
+          ]
+        ]
+        n >= 6  [
+          ask truck n [
+            setxy 2 -13
+          ]
+        ]
+      )
+
+      set n (n + 1)
+
+    ]
+  ]
+
+  ;ifelse coin-flip? [right random 100][left random 100]
 
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-544
-10
-1327
-438
+542
+13
+1325
+466
 -1
 -1
-12.705
+12.85
 1
 10
 1
@@ -99,8 +173,8 @@ GRAPHICS-WINDOW
 1
 -30
 30
--16
-16
+-17
+17
 0
 0
 1
