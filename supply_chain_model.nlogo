@@ -1,14 +1,35 @@
 ; Initialize the breeds
-breed [patients patient]
+breed [extractors extractor]
+breed [manufacturers factory]
 breed [hospitals hospital]
+breed [patients patient]
 breed [extr-transporters ex-truck]
 breed [hosp-transporters hs-truck]
-breed [manufacturers factory]
-breed [extractors extractor]
 
 ; Initialize internal values per breed
-patients-own[
-  health
+
+
+extr-transporters-own[
+  load_capacity
+  delivery_speed
+  current_load
+  heading_towards
+]
+hosp-transporters-own[
+  load_capacity
+  delivery_speed
+  current_load
+]
+extractors-own[
+  extractor_capacity
+  extraction_rate
+  raw_material_count
+  raw_material_type
+]
+manufacturers-own[
+  warehouse_capacity
+  manufacturing_rate
+  current_inven
 ]
 hospitals-own[
   patient_capacity
@@ -17,23 +38,9 @@ hospitals-own[
   mask_stock
   syringe_stock
 ]
-extr-transporters-own[
-  load_capacity
-  delivery_speed
-  current_load
+patients-own[
+  health
 ]
-manufacturers-own[
-  warehouse_capacity
-  manufacturing_rate
-  current_inven
-]
-extractors-own[
-  extractor_capacity
-  extraction_rate
-  raw_material_count
-  raw_material_type
-]
-
 
 ; Intialize environment
 to setup
@@ -42,49 +49,40 @@ to setup
   reset-ticks
 
   ; Sets the default shape for every agents so that spawning is easy
-  set-default-shape extr-transporters "truck"
-  set-default-shape hosp-transporters "truck"
-  set-default-shape manufacturers "factory"
   set-default-shape extractors "bulldozer top"
+  set-default-shape manufacturers "factory"
   set-default-shape hospitals "hospital"
   set-default-shape patients "dot"
+  set-default-shape extr-transporters "truck"
+  set-default-shape hosp-transporters "truck"
 
-  create-extr-transporters (transporter-multiplier * 2)
-  create-hosp-transporters (transporter-multiplier * 2)
-  create-manufacturers 2
-  create-extractors 2
-  create-hospitals 2
-  ; create-patients 100
-
-  ask extr-transporters [
-    set size  3
-    set color red
-  ]
-
-  ask hosp-transporters [
-    set size  3
-    set color blue
-  ]
-
-  ask manufacturers [
-    set size 10
-    set color brown
-  ]
-
-  ask extractors [
+  ; Create agents with hard-coded number for non-transporters
+  create-extractors 2[
     set size 7
     set color yellow
     set heading 0
   ]
-
-  ask hospitals [
+  create-manufacturers 2[
+    set size 10
+    set color brown
+  ]
+  create-hospitals 2 [
     set size 15
     set color gray
   ]
+  ; create-patients 100 [
+  ;  set size 2
+  ;  set color white
+  ;]
 
-  ask patients [
-    set size 2
-    set color white
+  create-extr-transporters (transporter_multiplier * 2)[
+    set size  3
+    set color red
+  ]
+
+  create-hosp-transporters (transporter_multiplier * 2)[
+    set size  3
+    set color blue
   ]
 
   setup-positions
@@ -137,6 +135,10 @@ to setup-positions
         ]
       )
 
+      ; Set random heading
+      ifelse coin-flip? [set heading towards turtle 0][set heading towards turtle 1]
+
+      display
       set n (n + 1)
 
     ]
@@ -155,6 +157,10 @@ to setup-positions
         ]
       )
 
+      ; Set random heading
+      ifelse coin-flip? [set heading towards turtle 4][set heading towards turtle 5]
+
+      display
       set n (n + 1)
 
     ]
@@ -162,18 +168,36 @@ to setup-positions
 
 end
 
+; Randomize choice
+to-report coin-flip?
+  report random 2 = 0
+end
+
+; Allows the transporters to move
+to transport
+
+  ask extr-transporters[
+    forward 1
+  ]
+  ask hosp-transporters[
+    forward 1
+  ]
+
+end
+
 ; Function at each time step (tick)
 to go
 
+  transport
 
   tick
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-542
-13
-1333
-471
+534
+16
+1325
+474
 -1
 -1
 12.85
@@ -183,8 +207,8 @@ GRAPHICS-WINDOW
 1
 1
 0
-1
-1
+0
+0
 1
 -30
 30
@@ -197,10 +221,10 @@ ticks
 30.0
 
 BUTTON
-34
-28
-98
-61
+364
+419
+428
+452
 Setup
 setup
 NIL
@@ -214,10 +238,10 @@ NIL
 1
 
 BUTTON
-116
-29
-179
-62
+446
+419
+509
+452
 Go
 go
 NIL
@@ -231,19 +255,29 @@ NIL
 1
 
 SLIDER
-210
-28
-382
-61
-transporter-multiplier
-transporter-multiplier
+9
+24
+181
+57
+transporter_multiplier
+transporter_multiplier
 1
 10
-3.0
+1.0
 1
 1
 NIL
 HORIZONTAL
+
+TEXTBOX
+82
+10
+183
+28
+will be multiplied to 2
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
