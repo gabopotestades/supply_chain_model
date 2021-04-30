@@ -1,13 +1,33 @@
 ; Initialize the breeds
-breed [patients patient]
-breed [hospitals hospital]
-breed [transporters truck]
-breed [manufacturers factory]
 breed [extractors extractor]
+breed [manufacturers factory]
+breed [hospitals hospital]
+breed [patients patient]
 
 ; Initialize internal values per breed
-patients-own[
-  health
+
+
+extr-transporters-own[
+  load_capacity
+  delivery_speed
+  current_load
+  heading_towards
+]
+hosp-transporters-own[
+  load_capacity
+  delivery_speed
+  current_load
+]
+extractors-own[
+  extractor_capacity
+  extraction_rate
+  raw_material_count
+  raw_material_type
+]
+manufacturers-own[
+  warehouse_capacity
+  manufacturing_rate
+  current_inven
 ]
 hospitals-own[
   patient_capacity
@@ -16,21 +36,8 @@ hospitals-own[
   mask_stock
   syringe_stock
 ]
-transporters-own[
-  load_capacity
-  delivery_speed
-  current_load
-]
-manufacturers-own[
-  warehouse_capacity
-  manufacturing_rate
-  current_inven
-]
-extractors-own[
-  extractor_capacity
-  extraction_rate
-  raw_material_count
-  raw_material_type
+patients-own[
+  health
 ]
 
 ; Intialize environment
@@ -40,42 +47,40 @@ to setup
   reset-ticks
 
   ; Sets the default shape for every agents so that spawning is easy
-  set-default-shape transporters "truck"
-  set-default-shape manufacturers "factory"
   set-default-shape extractors "bulldozer top"
+  set-default-shape manufacturers "factory"
   set-default-shape hospitals "hospital"
+  set-default-shape extr-transporters "truck"
+  set-default-shape hosp-transporters "truck"
   set-default-shape patients "dot"
 
-  create-transporters 8
-  create-manufacturers 2
-  create-extractors 2
-  create-hospitals 2
-  ; create-patients 100
-
-  ask transporters [
-    set size  3
-    set color blue
-  ]
-
-  ask manufacturers [
-    set size 10
-    set color brown
-  ]
-
-  ask extractors [
+  create-extractors 2[
     set size 7
     set color yellow
     set heading 0
   ]
-
-  ask hospitals [
+  create-manufacturers 2[
+    set size 10
+    set color brown
+  ]
+  create-hospitals 2 [
     set size 15
     set color gray
   ]
+  ; create-patients 100 [
+  ;  set size 2
+  ;  set color white
+  ;]
 
-  ask patients [
-    set size 2
-    set color white
+  ; Create agents with hard-coded number for non-transporters
+  create-extr-transporters (transporter_multiplier * 2)[
+    set size  3
+    set color red
+  ]
+
+  create-hosp-transporters (transporter_multiplier * 2)[
+    set size  3
+    set color blue
   ]
 
   setup-positions
@@ -115,50 +120,82 @@ to setup-positions
     ]
   ]
 
-  ; Transporters
-  let x 0
-  let y 0
+  ; Transporters heading to extractors
   set n 0
-  foreach sort transporters [ tr ->
+  foreach sort extr-transporters [ tr ->
    ask tr [
 
       (ifelse
-        n >= 0 and n < 2 [
-          ask truck n [
-            setxy -8 5
-          ]
-        ]
-        n >= 2 and n < 4 [
-          ask truck n [
-            setxy -4 -9
-          ]
-        ]
-        n >= 4 and n < 6  [
-          ask truck n [
-            setxy 2
-          ]
-        ]
-        n >= 6  [
-          ask truck n [
-            setxy 2 -9
-          ]
+        n mod 2 = 0 [
+          setxy -8 5
+        ][
+          setxy -8 -13
         ]
       )
 
+      ; Set random heading
+      ifelse coin-flip? [set heading towards turtle 0][set heading towards turtle 1]
+
+      display
       set n (n + 1)
 
     ]
   ]
 
-  ;ifelse coin-flip? [right random 100][left random 100]
+  ; Transporters heading to hospitals
+  set n 0
+  foreach sort hosp-transporters [ tr ->
+   ask tr [
 
+      (ifelse
+        n mod 2 = 0 [
+          setxy 2 5
+        ][
+          setxy 2 -13
+        ]
+      )
+
+      ; Set random heading
+      ifelse coin-flip? [set heading towards turtle 4][set heading towards turtle 5]
+
+      display
+      set n (n + 1)
+
+    ]
+  ]
+
+end
+
+; Randomize choice
+to-report coin-flip?
+  report random 2 = 0
+end
+
+; Allows the transporters to move
+to transport
+
+  ask extr-transporters[
+    forward 1
+  ]
+  ask hosp-transporters[
+    forward 1
+  ]
+
+end
+
+; Function at each time step (tick)
+to go
+
+  transport
+
+  tick
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-542
-13
+534
+16
 1325
-466
+474
 -1
 -1
 12.85
@@ -168,8 +205,8 @@ GRAPHICS-WINDOW
 1
 1
 0
-1
-1
+0
+0
 1
 -30
 30
@@ -182,10 +219,10 @@ ticks
 30.0
 
 BUTTON
-34
-28
-98
-61
+364
+419
+428
+452
 Setup
 setup
 NIL
@@ -196,6 +233,48 @@ NIL
 NIL
 NIL
 NIL
+1
+
+BUTTON
+446
+419
+509
+452
+Go
+go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+9
+24
+181
+57
+transporter_multiplier
+transporter_multiplier
+1
+10
+1.0
+1
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+82
+10
+183
+28
+will be multiplied to 2
+11
+0.0
 1
 
 @#$#@#$#@
