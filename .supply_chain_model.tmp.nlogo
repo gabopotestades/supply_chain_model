@@ -1,7 +1,8 @@
 ; Initialize the breeds
 breed [patients patient]
 breed [hospitals hospital]
-breed [transporters truck]
+breed [extr-transporters ex-truck]
+breed [hosp-transporters hs-truck]
 breed [manufacturers factory]
 breed [extractors extractor]
 
@@ -16,7 +17,7 @@ hospitals-own[
   mask_stock
   syringe_stock
 ]
-transporters-own[
+extr-transporters-own[
   load_capacity
   delivery_speed
   current_load
@@ -33,6 +34,7 @@ extractors-own[
   raw_material_type
 ]
 
+
 ; Intialize environment
 to setup
 
@@ -40,19 +42,26 @@ to setup
   reset-ticks
 
   ; Sets the default shape for every agents so that spawning is easy
-  set-default-shape transporters "truck"
+  set-default-shape extr-transporters "truck"
+  set-default-shape hosp-transporters "truck"
   set-default-shape manufacturers "factory"
   set-default-shape extractors "bulldozer top"
   set-default-shape hospitals "hospital"
   set-default-shape patients "dot"
 
-  create-transporters 8
+  create-extr-transporters (transporter-multiplier * 2)
+  create-hosp-transporters (transporter-multiplier * 2)
   create-manufacturers 2
   create-extractors 2
   create-hospitals 2
   ; create-patients 100
 
-  ask transporters [
+  ask extr-transporters [
+    set size  3
+    set color red
+  ]
+
+  ask hosp-transporters [
     set size  3
     set color blue
   ]
@@ -115,33 +124,16 @@ to setup-positions
     ]
   ]
 
-  ; Transporters
-  let x 0
-  let y 0
+  ; Transporters heading to extractors
   set n 0
-  foreach sort transporters [ tr ->
+  foreach sort extr-transporters [ tr ->
    ask tr [
 
       (ifelse
-        n >= 0 and n < 2 [
-          ask truck n [
-            setxy -8 5
-          ]
-        ]
-        n >= 2 and n < 4 [
-          ask truck n [
-            setxy -4 -9
-          ]
-        ]
-        n >= 4 and n < 6  [
-          ask truck n [
-            setxy 2
-          ]
-        ]
-        n >= 6  [
-          ask truck n [
-            setxy 2 -9
-          ]
+        n mod 2 = 0 [
+          setxy -8 5
+        ][
+          setxy -8 -13
         ]
       )
 
@@ -150,15 +142,38 @@ to setup-positions
     ]
   ]
 
-  ;ifelse coin-flip? [right random 100][left random 100]
+  ; Transporters heading to hospitals
+  set n 0
+  foreach sort hosp-transporters [ tr ->
+   ask tr [
 
+      (ifelse
+        n mod 2 = 0 [
+          setxy 2 5
+        ][
+          setxy  -13
+        ]
+      )
+
+      set n (n + 1)
+
+    ]
+  ]
+
+end
+
+; Function at each time step (tick)
+to go
+
+
+  tick
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 542
 13
-1325
-466
+1333
+471
 -1
 -1
 12.85
@@ -197,6 +212,38 @@ NIL
 NIL
 NIL
 1
+
+BUTTON
+116
+29
+179
+62
+Go
+go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+210
+28
+382
+61
+transporter-multiplier
+transporter-multiplier
+1
+10
+3.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
