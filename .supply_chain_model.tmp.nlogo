@@ -3,6 +3,8 @@ breed [extractors extractor]
 breed [manufacturers factory]
 breed [hospitals hospital]
 breed [patients patient]
+breed [extr-transporters ex-truck]
+breed [hosp-transporters hs-truck]
 
 ; Initialize internal values per breed
 
@@ -12,11 +14,15 @@ extr-transporters-own[
   delivery_speed
   current_load
   heading_towards
+  start_patch
+  destination
 ]
 hosp-transporters-own[
   load_capacity
   delivery_speed
   current_load
+  start_patch
+  destination
 ]
 extractors-own[
   extractor_capacity
@@ -50,10 +56,11 @@ to setup
   set-default-shape extractors "bulldozer top"
   set-default-shape manufacturers "factory"
   set-default-shape hospitals "hospital"
+  set-default-shape patients "dot"
   set-default-shape extr-transporters "truck"
   set-default-shape hosp-transporters "truck"
-  set-default-shape patients "dot"
 
+  ; Create agents with hard-coded number for non-transporters
   create-extractors 2[
     set size 7
     set color yellow
@@ -70,9 +77,8 @@ to setup
   ; create-patients 100 [
   ;  set size 2
   ;  set color white
-  ;]
+  ]
 
-  ; Create agents with hard-coded number for non-transporters
   create-extr-transporters (transporter_multiplier * 2)[
     set size  3
     set color red
@@ -133,8 +139,18 @@ to setup-positions
         ]
       )
 
+      set start_patch patch-here
       ; Set random heading
-      ifelse coin-flip? [set heading towards turtle 0][set heading towards turtle 1]
+      ifelse coin-flip?
+      [
+        set heading towards turtle 0
+        set destination (get_patch turtle 0)
+      ]
+      [
+        set heading towards turtle 1
+        set destination (get_patch turtle 1)
+      ]
+
 
       display
       set n (n + 1)
@@ -155,8 +171,17 @@ to setup-positions
         ]
       )
 
+      set start_patch patch-here
       ; Set random heading
-      ifelse coin-flip? [set heading towards turtle 4][set heading towards turtle 5]
+      ifelse coin-flip?
+      [
+        set heading towards turtle 4
+        set destination (get_patch turtle 4)
+      ]
+      [
+        set heading towards turtle 5
+        set destination (get_patch turtle 5)
+      ]
 
       display
       set n (n + 1)
@@ -164,6 +189,16 @@ to setup-positions
     ]
   ]
 
+end
+
+; Get the patch of a turtle
+to-report get_patch [turt]
+
+  let dest 0
+  ask turt [
+    set dest (patch-here)
+  ]
+  report dest
 end
 
 ; Randomize choice
@@ -175,9 +210,23 @@ end
 to transport
 
   ask extr-transporters[
+    let temp_dest 0
+    if (patch-here = destination) [
+      set temp_dest (destination)
+      set destination (start_patch)
+      set start_patch (temp_dest)
+      set heading towards destination
+    ]
     forward 1
   ]
   ask hosp-transporters[
+    let temp_dest 0
+    if (patch-here = destination) [
+      set temp_dest (destination)
+      set destination (start_patch)
+      set start_patch (temp_dest)
+      set heading towards destination
+    ]
     forward 1
   ]
 
@@ -261,7 +310,7 @@ transporter_multiplier
 transporter_multiplier
 1
 10
-1.0
+3.0
 1
 1
 NIL
