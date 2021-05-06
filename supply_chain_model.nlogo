@@ -46,6 +46,8 @@ manufacturers-own[
 ]
 hospitals-own[
   patient_capacity
+  patient_count
+
   glove_stock
   ppe_stock
   mask_stock
@@ -91,6 +93,7 @@ to setup
   create-hospitals 2 [
     set size 15
     set color gray
+    set patient_count 0
     set patient_capacity patient-capacity
     set glove_capacity glove-capacity
     set ppe_capacity ppe-capacity
@@ -248,6 +251,40 @@ to setup-positions
   ]
 end
 
+; patients to move
+to patient-move
+  ask patients[
+
+    ;uncomment for health decr (and death)
+    ;set health health - 1
+
+    let temp_dest 0
+    if (patch-here = destination) [
+      ;get rid of this later
+      set temp_dest (destination)
+      set destination (start_patch)
+      set start_patch (temp_dest)
+      set heading towards destination
+
+      ; if hospital 4 [patient-capacity] is full then go to 5, if also full, then die
+      ; Problem atm: How would you know which turtle/hospital it would go to?
+      ; if patient_capacity is NOT full, then call <admit-patient>
+
+    ]
+    forward 1
+
+    death
+  ]
+end
+
+to admit-patient
+  if patient_count < patient_capacity
+  [
+    set patient_count patient_count + 1
+    ; how to stop patients from moving if ever while "getting treated" (?)
+  ]
+end
+
 ; Get the patch of a turtle
 to-report get_patch [turt]
 
@@ -289,24 +326,6 @@ to transport
     forward 1
   ]
 
-end
-
-; patients to move
-to patient-move
-  ask patients[
-
-    set health health - 1
-
-    let temp_dest 0
-    if (patch-here = destination) [
-      set temp_dest (destination)
-      set destination (start_patch)
-      set start_patch (temp_dest)
-    ]
-    forward 1
-
-    death
-  ]
 end
 
 ; function to kill a patient if health reaches 0

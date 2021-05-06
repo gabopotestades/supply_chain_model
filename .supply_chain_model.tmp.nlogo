@@ -46,6 +46,8 @@ manufacturers-own[
 ]
 hospitals-own[
   patient_capacity
+  patient_count
+
   glove_stock
   ppe_stock
   mask_stock
@@ -91,6 +93,7 @@ to setup
   create-hospitals 2 [
     set size 15
     set color gray
+    set patient_count 0
     set patient_capacity patient-capacity
     set glove_capacity glove-capacity
     set ppe_capacity ppe-capacity
@@ -248,6 +251,41 @@ to setup-positions
   ]
 end
 
+; patients to move
+to patient-move
+  ask patients[
+
+    ;uncomment for health decr (and death)
+    ;set health health - 1
+
+    let temp_dest 0
+    if (patch-here = destination) [
+      ;get rid of this later
+      set temp_dest (destination)
+      set destination (start_patch)
+      set start_patch (temp_dest)
+      set heading towards destination
+
+      ; if hospital 4 [patient-capacity] is full then go to 5, if also full, then die
+      ; if patient_capacity is NOT full, then call <admit-patient>
+
+      ; Issue: How would you know which turtle/hospital it would go to?
+
+    ]
+    forward 1
+
+    death
+  ]
+end
+
+to admit-patient
+  if patient_count < patient_capacity
+  [
+    set patient_count patient_count + 1
+    ; how to stop patients from moving if ever while "getting treated" (?)
+  ]
+end
+
 ; Get the patch of a turtle
 to-report get_patch [turt]
 
@@ -291,24 +329,6 @@ to transport
 
 end
 
-; patients to move
-to patient-move
-  ask patients[
-
-    set health health - 1
-
-    let temp_dest 0
-    if (patch-here = destination) [
-      set temp_dest (destination)
-      set destination (start_patch)
-      set start_patch (temp_dest)
-    ]
-    forward 1
-
-    death
-  ]
-end
-
 ; function to kill a patient if health reaches 0
 to death
   if health < 0 [die]
@@ -347,21 +367,6 @@ GRAPHICS-WINDOW
 1
 ticks
 30.0
-
-SLIDER
-0
-0
-0
-0
-NIL
-NIL
-0
-100
-50.0
-1
-1
-NIL
-HORIZONTAL
 
 BUTTON
 372
@@ -425,7 +430,7 @@ will be multiplied to 2
 SLIDER
 10
 102
-216
+231
 135
 extractor-capacity
 extractor-capacity
@@ -503,10 +508,10 @@ Manufacturer variables
 1
 
 SLIDER
-10
-324
-232
-357
+11
+162
+233
+195
 patient-capacity
 patient-capacity
 10
@@ -548,10 +553,10 @@ patients per tick
 HORIZONTAL
 
 SLIDER
-9
-459
-232
-492
+10
+297
+233
+330
 ppe-capacity
 ppe-capacity
 0
@@ -563,10 +568,10 @@ PPEs
 HORIZONTAL
 
 SLIDER
-7
-368
-229
-401
+8
+206
+230
+239
 mask-capacity
 mask-capacity
 0
@@ -578,10 +583,10 @@ masks
 HORIZONTAL
 
 SLIDER
-8
-506
-232
-539
+9
+344
+233
+377
 glove-capacity
 glove-capacity
 0
@@ -593,10 +598,10 @@ gloves
 HORIZONTAL
 
 SLIDER
-6
-412
-229
-445
+7
+250
+230
+283
 syringe-capacity
 syringe-capacity
 0
@@ -608,10 +613,10 @@ syringes
 HORIZONTAL
 
 TEXTBOX
-15
-306
-165
-324
+16
+144
+166
+162
 Hospital variables
 11
 0.0
