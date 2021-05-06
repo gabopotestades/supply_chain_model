@@ -268,12 +268,12 @@ to patient-move
 
       ; if hospital 4 [patient-capacity] is full then go to 5, if also full, then die
       ; Problem atm: How would you know which turtle/hospital it would go to?
-      ; if patient_capacity is NOT full, then call <admit-patient>
+      ; if patient_capacity is NOT full, then call <admit-patient>?
 
     ]
     forward 1
 
-
+    ; checks if health < 0, if yes die
     death
   ]
 end
@@ -310,6 +310,26 @@ to transport
       set temp_dest (destination)
       set destination (start_patch)
       set start_patch (temp_dest)
+      if any? extractors-on patch-here
+      [
+       ; decrement extractor raw material
+        ask extractors-on patch-here
+        [
+
+          set raw_material_1_count (raw_material_1_count - 1)
+          set raw_material_2_count (raw_material_2_count - 1)
+          set raw_material_3_count (raw_material_3_count - 1)
+          set raw_material_4_count (raw_material_4_count - 1)
+        ]
+      ]
+      if any? manufacturers-on patch-here
+      [
+        ; increment manufacturer inventory
+        ask manufacturers-on patch-here
+        [
+           set current_inven (current_inven + 1)
+        ]
+      ]
       set heading towards destination
 
     ]
@@ -318,10 +338,29 @@ to transport
   ask hosp-transporters[
     let temp_dest 0
     if (patch-here = destination) [
-    ;if any? other hospitals in-radius 2[
+      ;if any? other hospitals in-radius 2[
       set temp_dest (destination)
       set destination (start_patch)
       set start_patch (temp_dest)
+      if any? hospitals-on patch-here
+      [
+         ; increment hospital inventory
+        ask hospitals-on patch-here
+        [
+          set glove_stock (glove_stock + 1)
+          set ppe_stock (ppe_stock + 1)
+          set mask_stock (mask_stock + 1)
+          set syringe_stock (syringe_stock + 1)
+        ]
+      ]
+      if any? manufacturers-on patch-here
+      [
+        ; decrement manufacturer inventory
+        ask manufacturers-on patch-here
+        [
+           set current_inven (current_inven - 1)
+        ]
+      ]
       set heading towards destination
     ]
     forward 1
@@ -835,7 +874,7 @@ Circle -7500403 false true 24 174 42
 Circle -7500403 false true 144 174 42
 Circle -7500403 false true 234 174 42
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.1.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
