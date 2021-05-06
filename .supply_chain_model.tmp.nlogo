@@ -267,12 +267,12 @@ to patient-move
       set heading towards destination
 
       ; if hospital 4 [patient-capacity] is full then go to 5, if also full, then die
+      ; Problem atm: How would you know which turtle/hospital it would go to?
       ; if patient_capacity is NOT full, then call <admit-patient>
-
-      ; Issue: How would you know which turtle/hospital it would go to?
 
     ]
     forward 1
+
 
     death
   ]
