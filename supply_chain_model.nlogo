@@ -234,11 +234,11 @@ to setup-positions
       (ifelse
         n mod 2 = 0 [
           ;setxy 2 5
-          set start_patch (get_patch turtle 2)
+          ;set start_patch (get_patch turtle 2)
           setxy random-xcor random-ycor
         ][
           ;setxy 2 -13
-          set start_patch (get_patch turtle 3)
+          ;set start_patch (get_patch turtle 3)
           setxy random-xcor random-ycor
         ]
       )
@@ -268,22 +268,41 @@ to patient-move
     ;set health health - 1
 
     let temp_dest 0
-    if (patch-here = destination) [
+    ifelse (patch-here = destination) [
       ;get rid of this later
-      set temp_dest (destination)
-      set destination (start_patch)
-      set start_patch (temp_dest)
-      set heading towards destination
+      ;set temp_dest (destination)
+      ;set destination (start_patch)
+      ;set start_patch (temp_dest)
+      ;set heading towards destination
 
       ; if hospital 4 [patient-capacity] is full then go to 5, if also full, then die
       ; Problem atm: How would you know which turtle/hospital it would go to?
       ; if patient_capacity is NOT full, then call <admit-patient>?
+      ifelse coin-flip?
+      [
+        ; not green = not healthy
+        ifelse (color != green)
+        [
+          set health (health - 1)
+          death
+        ]
+        [
+          ; count green survivors
+        ]
 
+      ]
+      [
+        ; green healthy
+        set color green
+      ]
     ]
-    forward 1
+    [
+      forward 1
+    ]
+
 
     ; checks if health < 0, if yes die
-    death
+
   ]
 end
 
@@ -406,6 +425,15 @@ end
 to go
   transport
   patient-move
+  ; parameterize the 10
+  create-patients 10 [
+    set size 2
+    set color orange
+    set health initial-health
+    setxy random-xcor random-ycor
+    set destination [patch xcor ycor] of one-of hospitals
+    set heading towards one-of hospitals-on destination
+  ]
   tick
 end
 @#$#@#$#@
@@ -903,7 +931,7 @@ Circle -7500403 false true 24 174 42
 Circle -7500403 false true 144 174 42
 Circle -7500403 false true 234 174 42
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.1.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
