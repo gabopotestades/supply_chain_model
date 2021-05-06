@@ -27,8 +27,17 @@ hosp-transporters-own[
 extractors-own[
   extractor_capacity
   extraction_rate
-  raw_material_count
-  raw_material_type
+  raw_material_1_count
+  raw_material_1_type
+
+  raw_material_2_count
+  raw_material_2_type
+
+  raw_material_3_count
+  raw_material_3_type
+
+  raw_material_4_count
+  raw_material_4_type
 ]
 manufacturers-own[
   warehouse_capacity
@@ -37,13 +46,22 @@ manufacturers-own[
 ]
 hospitals-own[
   patient_capacity
-  medicine_stock
+  patient_count
+
+  glove_stock
   ppe_stock
   mask_stock
   syringe_stock
+
+  glove_capacity
+  ppe_capacity
+  mask_capacity
+  syringe_capacity
 ]
 patients-own[
   health
+  start_patch
+  destination
 ]
 
 ; Intialize environment
@@ -65,28 +83,40 @@ to setup
     set size 7
     set color yellow
     set heading 0
+    set extractor_capacity extractor-capacity
   ]
   create-manufacturers 2[
     set size 10
     set color brown
+    set warehouse_capacity manufacturer-capacity
   ]
   create-hospitals 2 [
     set size 15
     set color gray
+    set patient_count 0
+    set patient_capacity patient-capacity
+    set glove_capacity glove-capacity
+    set ppe_capacity ppe-capacity
+    set mask_capacity mask-capacity
+    set syringe_capacity syringe-capacity
   ]
-  ; create-patients 100 [
-  ;  set size 2
-  ;  set color white
-  ;]
+
+   create-patients 100 [
+    set size 2
+    set color white
+    set health initial-health
+  ]
 
   create-extr-transporters (transporter_multiplier * 2)[
     set size  3
     set color red
+    set load_capacity load-capacity
   ]
 
   create-hosp-transporters (transporter_multiplier * 2)[
     set size  3
     set color blue
+    set load_capacity load-capacity
   ]
 
   setup-positions
@@ -189,6 +219,71 @@ to setup-positions
     ]
   ]
 
+  ; Patients heading to hospitals
+  ; NOTE: incomplete pa 'to
+  set n 0
+  foreach sort patients [ tr ->
+   ask tr [
+
+      (ifelse
+        n mod 2 = 0 [
+          setxy 2 5
+        ][
+          setxy 2 -13
+        ]
+      )
+
+      set start_patch patch-here
+      ; Set random heading
+      ifelse coin-flip?
+      [
+        set heading towards turtle 4
+        set destination (get_patch turtle 4)
+      ]
+      [
+        set heading towards turtle 5
+        set destination (get_patch turtle 5)
+      ]
+
+      display
+      set n (n + 1)
+    ]
+  ]
+end
+
+; patients to move
+to patient-move
+  ask patients[
+
+    ;uncomment for health decr (and death)
+    ;set health health - 1
+
+    let temp_dest 0
+    if (patch-here = destination) [
+      ;get rid of this later
+      set temp_dest (destination)
+      set destination (start_patch)
+      set start_patch (temp_dest)
+      set heading towards destination
+
+      ; if hospital 4 [patient-capacity] is full then go to 5, if also full, then die
+      ; Problem atm: How would you know which turtle/hospital it would go to?
+      ; if patient_capacity is NOT full, then call <admit-patient>?
+
+    ]
+    forward 1
+
+    ; checks if health < 0, if yes die
+    death
+  ]
+end
+
+to admit-patient
+  if patient_count < patient_capacity
+  [
+    set patient_count patient_count + 1
+    ; how to stop patients from moving if ever while "getting treated" (?)
+  ]
 end
 
 ; Get the patch of a turtle
@@ -216,12 +311,14 @@ to transport
       set destination (start_patch)
       set start_patch (temp_dest)
       set heading towards destination
+
     ]
     forward 1
   ]
   ask hosp-transporters[
     let temp_dest 0
     if (patch-here = destination) [
+    ;if any? other hospitals in-radius 2[
       set temp_dest (destination)
       set destination (start_patch)
       set start_patch (temp_dest)
@@ -232,11 +329,15 @@ to transport
 
 end
 
+; function to kill a patient if health reaches 0
+to death
+  if health < 0 [die]
+end
+
 ; Function at each time step (tick)
 to go
-
   transport
-
+  patient-move
   tick
 end
 @#$#@#$#@
@@ -268,10 +369,10 @@ ticks
 30.0
 
 BUTTON
-364
-419
-428
-452
+372
+445
+436
+478
 Setup
 setup
 NIL
@@ -285,13 +386,13 @@ NIL
 1
 
 BUTTON
-446
-419
-509
-452
+454
+445
+517
+478
 Go
 go
-NIL
+T
 1
 T
 OBSERVER
@@ -302,29 +403,284 @@ NIL
 1
 
 SLIDER
-9
-24
-181
-57
+13
+32
+217
+65
 transporter_multiplier
 transporter_multiplier
 1
 10
-3.0
+1.0
 1
 1
 NIL
 HORIZONTAL
 
 TEXTBOX
-82
-10
-183
-28
+117
+15
+218
+33
 will be multiplied to 2
 11
 0.0
 1
+
+SLIDER
+10
+102
+231
+135
+extractor-capacity
+extractor-capacity
+10
+100
+35.0
+1
+1
+items
+HORIZONTAL
+
+SLIDER
+1025
+526
+1235
+559
+extraction-rate
+extraction-rate
+10
+100
+50.0
+1
+1
+items per tick
+HORIZONTAL
+
+TEXTBOX
+15
+81
+165
+99
+Extractor variables
+11
+0.0
+1
+
+SLIDER
+279
+109
+499
+142
+manufacturer-capacity
+manufacturer-capacity
+10
+100
+76.0
+1
+1
+items
+HORIZONTAL
+
+SLIDER
+1024
+566
+1237
+599
+manufacture-rate
+manufacture-rate
+10
+100
+50.0
+1
+1
+items per tick
+HORIZONTAL
+
+TEXTBOX
+288
+90
+438
+108
+Manufacturer variables
+11
+0.0
+1
+
+SLIDER
+11
+162
+233
+195
+patient-capacity
+patient-capacity
+10
+100
+73.0
+1
+1
+patients
+HORIZONTAL
+
+SLIDER
+1262
+528
+1485
+561
+admission-rate
+admission-rate
+10
+100
+50.0
+1
+1
+patients per tick
+HORIZONTAL
+
+SLIDER
+1263
+565
+1486
+598
+release-rate
+release-rate
+0
+100
+50.0
+1
+1
+patients per tick
+HORIZONTAL
+
+SLIDER
+10
+297
+233
+330
+ppe-capacity
+ppe-capacity
+0
+100
+36.0
+1
+1
+PPEs
+HORIZONTAL
+
+SLIDER
+8
+206
+230
+239
+mask-capacity
+mask-capacity
+0
+100
+49.0
+1
+1
+masks
+HORIZONTAL
+
+SLIDER
+9
+344
+233
+377
+glove-capacity
+glove-capacity
+0
+100
+31.0
+1
+1
+gloves
+HORIZONTAL
+
+SLIDER
+7
+250
+230
+283
+syringe-capacity
+syringe-capacity
+0
+100
+35.0
+1
+1
+syringes
+HORIZONTAL
+
+TEXTBOX
+16
+144
+166
+162
+Hospital variables
+11
+0.0
+1
+
+TEXTBOX
+285
+156
+435
+174
+Transporter variables
+11
+0.0
+1
+
+SLIDER
+281
+172
+501
+205
+load-capacity
+load-capacity
+0
+100
+35.0
+1
+1
+items
+HORIZONTAL
+
+TEXTBOX
+1020
+504
+1170
+522
+Just for later (if ever)
+11
+15.0
+1
+
+TEXTBOX
+286
+214
+436
+232
+Patient variables
+11
+0.0
+1
+
+SLIDER
+281
+231
+507
+264
+initial-health
+initial-health
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
