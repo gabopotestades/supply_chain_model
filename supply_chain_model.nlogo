@@ -323,6 +323,38 @@ to patient-move foreach sort patients [p ->
 ]
 end
 
+to discharge-patients foreach sort patients [p ->
+  ask p[
+    ;let temp_dest 0
+    if (patch-here = destination) [
+      if any? hospitals-on patch-here
+      [
+        ask p
+        [
+          set health health + 1
+          if (health >= 90)
+          [
+            ask hospitals-on patch-here
+            [
+              set patient_count (patient_count - 1)
+            ]
+          ]
+
+        ]
+      ]
+
+       if (color = green)
+        [
+
+          ; hide
+        ]
+    ]
+
+
+  ]
+]
+end
+
 to admit-patient
   if patient_count < patient_capacity
   [
@@ -451,6 +483,7 @@ to go
     set destination [patch xcor ycor] of one-of hospitals
     set heading towards one-of hospitals-on destination
   ]
+  discharge-patients
   tick
 end
 @#$#@#$#@
