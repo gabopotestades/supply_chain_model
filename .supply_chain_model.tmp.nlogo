@@ -103,7 +103,7 @@ to setup
 
    create-patients 100 [
     set size 2
-    set color orange
+    set color
     set health initial-health
   ]
 
