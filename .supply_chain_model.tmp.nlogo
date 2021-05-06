@@ -348,11 +348,26 @@ GRAPHICS-WINDOW
 ticks
 30.0
 
+SLIDER
+0
+0
+0
+0
+NIL
+NIL
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
 BUTTON
-366
-542
-430
-575
+372
+445
+436
+478
 Setup
 setup
 NIL
@@ -366,10 +381,10 @@ NIL
 1
 
 BUTTON
-448
-542
-511
-575
+454
+445
+517
+478
 Go
 go
 T
@@ -488,10 +503,10 @@ Manufacturer variables
 1
 
 SLIDER
-7
-173
-229
-206
+10
+324
+232
+357
 patient-capacity
 patient-capacity
 10
@@ -533,10 +548,10 @@ patients per tick
 HORIZONTAL
 
 SLIDER
-6
-308
-229
-341
+9
+459
+232
+492
 ppe-capacity
 ppe-capacity
 0
@@ -548,10 +563,10 @@ PPEs
 HORIZONTAL
 
 SLIDER
-4
-217
-226
-250
+7
+368
+229
+401
 mask-capacity
 mask-capacity
 0
@@ -563,10 +578,10 @@ masks
 HORIZONTAL
 
 SLIDER
-5
-355
-229
-388
+8
+506
+232
+539
 glove-capacity
 glove-capacity
 0
@@ -578,10 +593,10 @@ gloves
 HORIZONTAL
 
 SLIDER
-3
-261
-226
-294
+6
+412
+229
+445
 syringe-capacity
 syringe-capacity
 0
@@ -593,10 +608,10 @@ syringes
 HORIZONTAL
 
 TEXTBOX
-12
-155
-162
-173
+15
+306
+165
+324
 Hospital variables
 11
 0.0

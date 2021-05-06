@@ -410,7 +410,7 @@ will be multiplied to 2
 SLIDER
 10
 102
-216
+231
 135
 extractor-capacity
 extractor-capacity
@@ -488,10 +488,10 @@ Manufacturer variables
 1
 
 SLIDER
-10
-324
-232
-357
+11
+162
+233
+195
 patient-capacity
 patient-capacity
 10
@@ -533,10 +533,10 @@ patients per tick
 HORIZONTAL
 
 SLIDER
-9
-459
-232
-492
+10
+297
+233
+330
 ppe-capacity
 ppe-capacity
 0
@@ -548,10 +548,10 @@ PPEs
 HORIZONTAL
 
 SLIDER
-7
-368
-229
-401
+8
+206
+230
+239
 mask-capacity
 mask-capacity
 0
@@ -563,10 +563,10 @@ masks
 HORIZONTAL
 
 SLIDER
-8
-506
-232
-539
+9
+344
+233
+377
 glove-capacity
 glove-capacity
 0
@@ -578,10 +578,10 @@ gloves
 HORIZONTAL
 
 SLIDER
-6
-412
-229
-445
+7
+250
+230
+283
 syringe-capacity
 syringe-capacity
 0
@@ -593,10 +593,10 @@ syringes
 HORIZONTAL
 
 TEXTBOX
-15
-306
-165
-324
+16
+144
+166
+162
 Hospital variables
 11
 0.0
