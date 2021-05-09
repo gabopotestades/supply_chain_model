@@ -261,49 +261,98 @@ to setup-positions
 end
 
 ; patients to move
-to patient-move
-  ask patients[
-
-    ;uncomment for health decr (and death)
-    ;set health health - 1
-
-    let temp_dest 0
+to patient-move foreach sort patients [p ->
+  ask p[
+    ;let temp_dest 0
     ifelse (patch-here = destination) [
-      ;get rid of this later
-      ;set temp_dest (destination)
-      ;set destination (start_patch)
-      ;set start_patch (temp_dest)
-      ;set heading towards destination
+      if any? hospitals-on patch-here
+      [
+        ; increment patient count in the hospital if the patient is already in the hospital
+        ask hospitals-on patch-here
+        [
+          ; if there is a slot in the current hospital, admit self
+          ifelse ((patient_count + 1) <= patient_capacity)
+          [
+            set patient_count (patient_count + 1)
+            ask p
+            [
+              set color green
+            ]
+          ]
+          [
+            ; else reroute the patient to another hospital
+            ask p
+            [
+              ; only reroute the unhealthy patients
+              if(color != green)
+              [
+                ifelse (one-of hospitals with [patient_count < patient_capacity] = nobody)[
+                  set health (health - 1)
+                  death
+                ]
+                [
+                  set destination [patch xcor ycor] of one-of hospitals with [patient_count < patient_capacity]
+                  set heading towards one-of hospitals-on destination
+                  forward 1
+                ]
+              ]
+            ]
+          ]
 
-      ; if hospital 4 [patient-capacity] is full then go to 5, if also full, then die
-      ; Problem atm: How would you know which turtle/hospital it would go to?
-      ; if patient_capacity is NOT full, then call <admit-patient>?
-      ifelse coin-flip?
+          ; else lipat hospital
+        ]
+      ]
+
+      ; coin-flip if the patient will get healthy or not
+      if coin-flip?
       [
         ; not green = not healthy
-        ifelse (color != green)
+        if (color != green)
         [
           set health (health - 1)
           death
         ]
-        [
-          ; count green survivors
-        ]
 
-      ]
-      [
-        ; green healthy
-        set color green
       ]
     ]
     [
       forward 1
     ]
 
+  ]
+]
+end
 
-    ; checks if health < 0, if yes die
+to discharge-patients foreach sort patients [p ->
+  ask p[
+    ;let temp_dest 0
+    if (patch-here = destination) [
+      if any? hospitals-on patch-here
+      [
+        ask p
+        [
+          set health health + 1
+          if (health >= 90)
+          [
+            ask hospitals-on patch-here
+            [
+              set patient_count (patient_count - 1)
+            ]
+          ]
+
+        ]
+      ]
+
+       if (color = green)
+        [
+
+          ; hide
+        ]
+    ]
+
 
   ]
+]
 end
 
 to admit-patient
@@ -426,7 +475,7 @@ to go
   transport
   patient-move
   ; parameterize the 10
-  create-patients 10 [
+  create-patients 1 [
     set size 2
     set color orange
     set health initial-health
@@ -434,6 +483,7 @@ to go
     set destination [patch xcor ycor] of one-of hospitals
     set heading towards one-of hospitals-on destination
   ]
+  discharge-patients
   tick
 end
 @#$#@#$#@
@@ -612,7 +662,7 @@ patient-capacity
 patient-capacity
 10
 100
-73.0
+100.0
 1
 1
 patients
