@@ -146,19 +146,19 @@ to setup-agents
   ]
 
    create-patients 100 [
-    set size 1
+    set size 2
     set color orange
     set health initial-health
   ]
 
   create-extr-transporters (transporter_multiplier * 2)[
-    set size  2
+    set size
     set color red
     set load_capacity load-capacity
   ]
 
   create-hosp-transporters (transporter_multiplier * 2)[
-    set size  2
+    set size  3
     set color blue
     set load_capacity load-capacity
   ]
@@ -428,7 +428,7 @@ end
 ; Creates a patient in near the hospitals
 to spawn-patient
     create-patients 1 [
-    set size 1
+    set size 2
     set color orange
     ifelse coin-flip?
     [ setxy 30 3 ] [ setxy 30 -13 ]
