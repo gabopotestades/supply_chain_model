@@ -232,12 +232,12 @@ to setup-positions
       (ifelse
         n mod 2 = 0 [
           ; setxy -8 5
-          set start_patch (get-patch turtle 2)
-          setxy get-coords-x turtle 2 get-coords-y turtle 2
+          set start_patch patch 1 4 ; (get-patch turtle 2)
+          setxy 1 4 ; get-coords-x turtle 2 get-coords-y turtle 2
         ][
           ; setxy -8 -13
-          set start_patch (get-patch turtle 3)
-          setxy get-coords-x turtle 3 get-coords-y turtle 3
+          set start_patch patch 1 -12 ; (get-patch turtle 3)
+          setxy 1 -12 ; get-coords-x turtle 3 get-coords-y turtle 3
         ]
       )
 
@@ -267,12 +267,12 @@ to setup-positions
       (ifelse
         n mod 2 = 0 [
           ; setxy 2 5
-          set start_patch (get-patch turtle 2)
-          setxy get-coords-x turtle 2 get-coords-y turtle 2
+          set start_patch patch 1 4 ; (get-patch turtle 2)
+          setxy 1 4 ; get-coords-x turtle 2 get-coords-y turtle 2
         ][
           ; setxy 2 -13
-          set start_patch (get-patch turtle 3)
-          setxy get-coords-x turtle 3 get-coords-y turtle 3
+          set start_patch patch 1 -12 ;(get-patch turtle 3)
+          setxy 1 -12 ; get-coords-x turtle 3 get-coords-y turtle 3
         ]
       )
 
