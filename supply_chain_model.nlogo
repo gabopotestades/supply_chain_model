@@ -1,6 +1,11 @@
 ; Initialize globals
 globals[
   roads
+  first-ex-patches
+  second-ex-patches
+  extractor-pick-ups
+  manufacturer-drop-offs
+  hospital-drop-offs
   intersections
 ]
 
@@ -100,15 +105,56 @@ to setup-patches
   ]
 
   set intersections roads with [
-    (pxcor = -6 and pycor = 0) or
-    (pxcor = -6 and pycor = 9) or
-    (pxcor = 18 and pycor = 0) or
-    (pxcor = 18 and pycor = 9) or
-    (pxcor = -6 and pycor = -18) ;;or
-;    (pxcor = 18 and pycor = -8)
+    (pxcor = -10 and pycor = 3) or
+    (pxcor = -10 and pycor = -13) or
+    (pxcor = 10 and pycor = 3) or
+    (pxcor = 10 and pycor = -13)
   ]
 
+  ; Set patches to be traveled by the upper extractor
+  set first-ex-patches patches with [
+    (pxcor >= -30 and pxcor < -10) and
+    pycor > 3
+  ]
+
+  ; Set patches to be traveled by the lower  extractor
+  set second-ex-patches patches with [
+    (pxcor >= -30 and pxcor < -10) and
+    (pycor > -13 and pycor < 3)
+  ]
+
+  ; Set patches to be the pickup point
+  set extractor-pick-ups patches with [
+
+    (pycor = 3 or pycor = -13) and
+   (pxcor > -23 and pxcor < -19)
+
+  ]
+
+  ; Set patches to be the drop off point from extractor to manufacturers
+  set manufacturer-drop-offs patches with [
+
+    (pycor = 3 or pycor = -13) and
+   (pxcor > -1 and pxcor < 3)
+
+  ]
+
+  ; Set patches to be the drop off point from manufacturers to hospitals
+  set hospital-drop-offs patches with [
+
+    (pycor = 3 or pycor = -13) and
+   (pxcor > 18 and pxcor < 22)
+
+  ]
+
+  ; Set colors of patches
+  ask first-ex-patches [ set pcolor grey + 2]
+  ask second-ex-patches [ set pcolor grey + 2]
   ask roads [ set pcolor white ]
+  ask extractor-pick-ups [set pcolor yellow + 2]
+  ask manufacturer-drop-offs [set pcolor brown + 2]
+  ask hospital-drop-offs [set pcolor red + 2]
+
 end
 
 ; Create agents with specific designs
@@ -191,38 +237,12 @@ to setup-positions
 
   ; Extractors
 
-  let first-ex-patches patches with [
-    (pxcor >= -30 and pxcor < -10) and
-    pycor > 3
-  ]
-  ask first-ex-patches [
-   set pcolor grey + 2
-  ]
-
   ask extractor 0 [
     move-to one-of first-ex-patches
-  ]
-
-  let second-ex-patches patches with [
-    (pxcor >= -30 and pxcor < -10) and
-    (pycor > -13 and pycor < 3)
-  ]
-  ask second-ex-patches [
-   set pcolor grey + 2
   ]
   ask extractor 1 [
     move-to one-of second-ex-patches
   ]
-
-  ;set n 14
-  ;foreach sort extractors [ ex ->
-  ; ask ex [
-  ;    setxy -26 n
-  ;    set n (n - 28)
-  ;    display
-  ;  ]
-  ;]
-
 
   ; Transporters heading to extractors
   set n 0
@@ -231,28 +251,24 @@ to setup-positions
 
       (ifelse
         n mod 2 = 0 [
-          ; setxy -8 5
-          set start_patch patch 1 4 ; (get-patch turtle 2)
-          setxy 1 4 ; get-coords-x turtle 2 get-coords-y turtle 2
+          set start_patch patch 1 3
+          setxy 1 3
         ][
-          ; setxy -8 -13
-          set start_patch patch 1 -12 ; (get-patch turtle 3)
-          setxy 1 -12 ; get-coords-x turtle 3 get-coords-y turtle 3
+          set start_patch patch 1 -13
+          setxy 1 -13
         ]
       )
 
       ; Set random heading
       ifelse coin-flip?
       [
-        set heading towards patch -21 4 ; turtle 0
-        set destination patch -21 4 ; (get-patch turtle 0)
+        set destination patch -21 3
       ]
       [
-        set heading towards patch -21 -12 ; turtle 1
-        set destination patch -21 -12 ; (get-patch turtle 1)
+        set destination patch -21 -13
       ]
 
-
+      set heading 270
       display
       set n (n + 1)
 
@@ -266,69 +282,70 @@ to setup-positions
 
       (ifelse
         n mod 2 = 0 [
-          ; setxy 2 5
-          set start_patch patch 1 4 ; (get-patch turtle 2)
-          setxy 1 4 ; get-coords-x turtle 2 get-coords-y turtle 2
+          set start_patch patch 1 3
+          setxy 1 3
         ][
-          ; setxy 2 -13
-          set start_patch patch 1 -12 ;(get-patch turtle 3)
-          setxy 1 -12 ; get-coords-x turtle 3 get-coords-y turtle 3
+          set start_patch patch 1 -13
+          setxy 1 -13
         ]
       )
 
       ; Set random heading
       ifelse coin-flip?
       [
-        set heading towards patch 21 4 ; turtle 4
-        set destination patch 21 4 ; (get-patch turtle 4)
+        set destination patch 21 3
       ]
       [
-        set heading towards patch 21 -12 ; turtle 5
-        set destination patch 21 -12 ; (get-patch turtle 5)
+        set destination patch 21 -13
       ]
 
+      set heading 90
       display
       set n (n + 1)
 
     ]
   ]
 
-  ; Patients heading to hospitals
-  ; NOTE: incomplete pa 'to
-  set n 0
   foreach sort patients [ tr ->
    ask tr [
 
 
       ifelse coin-flip?
-      [ setxy 30 3 ] [ setxy 30 -13 ]
-
-      ; Set random heading
-      ifelse coin-flip?
       [
-        set heading towards turtle 4
-        set destination (get-patch turtle 4)
+        setxy 30 3
+        ; set heading towards turtle 4
+        set destination patch 20 3
       ]
       [
-        set heading towards turtle 5
-        set destination (get-patch turtle 5)
+        setxy 30 -13
+        ; set heading towards turtle 5
+        set destination patch 20 -13
       ]
 
+      set heading -90
       display
-      set n (n + 1)
     ]
   ]
 end
 
 ; Patients to move
 to patient-move foreach sort patients [p ->
-  ask p[
-    ;let temp_dest 0
+
+  ask p [
+
     ifelse (patch-here = destination) [
-      if any? hospitals-on patch-here
-      [
+
+        let hosp_number 0
+        ifelse [pycor] of patch-here = 3
+        [
+          set hosp_number 4
+        ]
+        [
+          set hosp_number 5
+        ]
+
         ; increment patient count in the hospital if the patient is already in the hospital
-        ask hospitals-on patch-here
+        ask hospital hosp_number
         [
           ; if there is a slot in the current hospital, admit self
           ifelse ((patient_count + 1) <= patient_capacity)
@@ -361,7 +378,6 @@ to patient-move foreach sort patients [p ->
 
           ; else lipat hospital
         ]
-      ]
 
       ; coin-flip if the patient will get healthy or not
       if coin-flip?
@@ -385,24 +401,30 @@ end
 
 ; Discharge if a patient is in the hospital
 to discharge-patients foreach sort patients [p ->
-  ask p[
-    ;let temp_dest 0
+  ask p [
+
     if (patch-here = destination) [
-      if any? hospitals-on patch-here
-      [
+
+      let hosp_number 0
+        ifelse [pycor] of patch-here = 3
+        [
+          set hosp_number 4
+        ]
+        [
+          set hosp_number 5
+        ]
         ask p
         [
           set health health + 1
           if (health >= 90)
           [
-            ask hospitals-on patch-here
+            ask hospital hosp_number
             [
               set patient_count (patient_count - 1)
             ]
           ]
 
         ]
-      ]
 
        if (color = green)
         [
@@ -410,8 +432,6 @@ to discharge-patients foreach sort patients [p ->
           ; hide
         ]
     ]
-
-
   ]
 ]
 end
@@ -431,10 +451,18 @@ to spawn-patient
     set size 1
     set color orange
     ifelse coin-flip?
-    [ setxy 30 3 ] [ setxy 30 -13 ]
+    [
+      setxy 30 3
+      set destination patch 20 3
+    ]
+    [
+      setxy 30 -13
+      set destination patch 20 -13
+    ]
     set health initial-health
-    set destination [patch xcor ycor] of one-of hospitals
-    set heading towards one-of hospitals-on destination
+    set heading -90
+    ; set destination [patch xcor ycor] of one-of hospitals
+    ; set heading towards one-of hospitals-on destination
   ]
 end
 
@@ -475,69 +503,291 @@ to-report coin-flip?
   report random 2 = 0
 end
 
+; Allows the extractor transporters to change lanes
+to rotate-ext-transporters ; ext-transpoter procedure
+
+  let x_start [pxcor] of start_patch
+  let y_start [pycor] of start_patch
+  let x_dest  [pxcor] of destination
+  let y_dest  [pycor] of destination
+  let x_cur   [pxcor] of patch-here
+  let y_cur   [pycor] of patch-here
+
+    ; 3 or -13
+    if
+    (
+      ; Check if the current patch is an intersection
+      (member? patch-here intersections) and
+      (y_start != y_dest)
+    )
+    [
+      ;; COORDINATES GUIDE;;
+      ; 2 is the x coordinate of the manufacturers
+      ; -21 is the x coordinate of the extractors pickup point
+      ; 3 is the y coordinate of the upper lane
+      ; -13 is the y coordinate of the lower lane
+
+      (
+      ifelse
+      ; If the the transporter is a horizontal road
+      ( y_dest != y_cur and y_start != y_dest)
+      [
+        (
+          ifelse
+          x_dest = 1 and y_cur = 3 ; Going to a manufacturer on the lower lane
+          [
+            rt 90
+          ]
+          x_dest = 1 and y_cur = -13 ; Going to a manufacturer on the upper lane
+          [
+            rt -90
+          ]
+          x_dest = -21 and y_cur = 3 ; Going to an extractor on the lower lane
+          [
+            rt -90
+          ]
+          x_dest = -21 and y_cur = -13 ; Going to an extractor on the lower lane
+          [
+            rt 90
+          ]
+        )
+      ]
+      ; If the transporter is in a vertical road
+      (y_dest = y_cur and y_start != y_dest)
+      [
+        (
+          ifelse
+          x_dest = 1 and y_cur = 3 ; Going to a manufacturer on the lower lane
+          [
+            rt 90
+          ]
+          x_dest = 1 and y_cur = -13 ; Going to a manufacturer on the upper lane
+          [
+            rt -90
+          ]
+          x_dest = -21 and y_cur = 3 ; Going to an extractor on the lower lane
+          [
+            rt -90
+          ]
+          x_dest = -21 and y_cur = -13 ; Going to an extractor on the lower lane
+          [
+            rt 90
+          ]
+        )
+      ]
+      )
+
+    ]
+
+end
+
+; Allows the hospital transporters to change lanes
+to rotate-hosp-transporters ;  hosp-transporter procedure
+
+  let x_start [pxcor] of start_patch
+  let y_start [pycor] of start_patch
+  let x_dest  [pxcor] of destination
+  let y_dest  [pycor] of destination
+  let x_cur   [pxcor] of patch-here
+  let y_cur   [pycor] of patch-here
+
+    ; 3 or -13
+    if
+    (
+      ; Check if the current patch is an intersection
+      (member? patch-here intersections) and
+      (y_start != y_dest)
+    )
+    [
+      ;; COORDINATES GUIDE;;
+      ; 2 is the x coordinate of the manufacturers
+      ; -21 is the x coordinate of the extractors pickup point
+      ; 3 is the y coordinate of the upper lane
+      ; -13 is the y coordinate of the lower lane
+
+      (
+      ifelse
+      ; If the the transporter is a horizontal road
+      ( y_dest != y_cur and y_start != y_dest)
+      [
+        (
+          ifelse
+          x_dest = 1 and y_cur = 3 ; Going to a manufacturer on the lower lane
+          [
+            rt -90
+          ]
+          x_dest = 1 and y_cur = -13 ; Going to a manufacturer on the upper lane
+          [
+            rt 90
+          ]
+          x_dest = 21 and y_cur = 3 ; Going to an extractor on the lower lane
+          [
+            rt 90
+          ]
+          x_dest = 21 and y_cur = -13 ; Going to an extractor on the lower lane
+          [
+            rt -90
+          ]
+        )
+      ]
+      ; If the transporter is in a vertical road
+      (y_dest = y_cur and y_start != y_dest)
+      [
+        (
+          ifelse
+          x_dest = 1 and y_cur = 3 ; Going to a manufacturer on the lower lane
+          [
+            rt -90
+          ]
+          x_dest = 1 and y_cur = -13 ; Going to a manufacturer on the upper lane
+          [
+            rt 90
+          ]
+          x_dest = 21 and y_cur = 3 ; Going to an extractor on the lower lane
+          [
+            rt 90
+          ]
+          x_dest = 21 and y_cur = -13 ; Going to an extractor on the lower lane
+          [
+            rt -90
+          ]
+        )
+      ]
+      )
+
+    ]
+
+end
+
 ; Allows the transporters to move
 to transport ; transporter procedure
 
+  ; Transports the raw materials to the manufacturer
   ask extr-transporters[
     let temp_dest 0
+
+    ; If the tranporter reached its destination
     if (patch-here = destination) [
+
       set temp_dest (destination)
       set destination (start_patch)
       set start_patch (temp_dest)
-      if any? extractors-on patch-here
-      [
-       ; decrement extractor raw material
-        ask extractors-on patch-here
-        [
 
+      ; Check if y-coordinate is 3 (upper extractor)
+      ; or -13 (lower extractor)
+      if (member? patch-here extractor-pick-ups)
+      [
+        let extractor_number 0
+        ifelse [pycor] of patch-here = 3
+        [
+          set extractor_number 0
+        ]
+        [
+          set extractor_number 1
+        ]
+
+        ask extractor extractor_number [
+          ; Get the raw materials from the extractors
           set raw_material_1_count (raw_material_1_count - 1)
           set raw_material_2_count (raw_material_2_count - 1)
           set raw_material_3_count (raw_material_3_count - 1)
           set raw_material_4_count (raw_material_4_count - 1)
         ]
+
       ]
-      if any? manufacturers-on patch-here
+
+      ; Check if y-coordinate is 3 (upper manufacturer)
+      ; or -13 (lower manufacturer)
+      if (member? patch-here manufacturer-drop-offs)
       [
-        ; increment manufacturer inventory
-        ask manufacturers-on patch-here
+        let manuf_number 0
+        ifelse [pycor] of patch-here = 3
         [
+          set manuf_number 2
+        ]
+        [
+          set manuf_number 3
+        ]
+
+        ask factory manuf_number [
+           ; Add current inventory to the manufacturer destination
            set current_inven (current_inven + 1)
         ]
+
       ]
-      set heading towards destination
+
+      ; Rotate to go back
+      rt 180
 
     ]
+
+    ; Rotate if in an intersection
+    rotate-ext-transporters
+
     forward 1
+    display
   ]
+
+  ; Transports the manufactured goods to the hospitals
   ask hosp-transporters[
     let temp_dest 0
     if (patch-here = destination) [
-      ;if any? other hospitals in-radius 2[
+
       set temp_dest (destination)
       set destination (start_patch)
       set start_patch (temp_dest)
-      if any? hospitals-on patch-here
+
+      ; Check if y-coordinate is 3 (upper hospital)
+      ; or -13 (lower hospital)
+      if (member? patch-here hospital-drop-offs)
       [
-         ; increment hospital inventory
-        ask hospitals-on patch-here
+        let hosp_number 0
+        ifelse [pycor] of patch-here = 3
         [
+          set hosp_number 4
+        ]
+        [
+          set hosp_number 5
+        ]
+
+        ask hospital hosp_number [
+          ; Add stock to the hospital destination
           set glove_stock (glove_stock + 1)
           set ppe_stock (ppe_stock + 1)
           set mask_stock (mask_stock + 1)
           set syringe_stock (syringe_stock + 1)
         ]
+
       ]
-      if any? manufacturers-on patch-here
+
+      ; Check if y-coordinate is 3 (upper manufacturer)
+      ; or -13 (lower manufacturer)
+      if (member? patch-here manufacturer-drop-offs)
       [
-        ; decrement manufacturer inventory
-        ask manufacturers-on patch-here
+        let manuf_number 0
+        ifelse [pycor] of patch-here = 3
         [
+          set manuf_number 2
+        ]
+        [
+          set manuf_number 3
+        ]
+
+        ask factory manuf_number [
+           ; Add current inventory to the manufacturer destination
            set current_inven (current_inven - 1)
         ]
+
       ]
-      set heading towards destination
+
+
+      rt 180
+
     ]
+
+    rotate-hosp-transporters
     forward 1
+    display
   ]
 
 end
@@ -552,11 +802,11 @@ to extract ; extractor procedure
       rt 180
     ]
 
-    if ticks mod 11 = 0
+    if ticks mod 10 = 0
     [
       rt random 40
       lt random 40
-      fd 1
+      fd 0.5
     ]
   ]
 
@@ -647,7 +897,7 @@ transporter_multiplier
 transporter_multiplier
 1
 10
-2.0
+7.0
 1
 1
 NIL
@@ -672,17 +922,17 @@ extractor-capacity
 extractor-capacity
 10
 100
-35.0
+34.0
 1
 1
 items
 HORIZONTAL
 
 SLIDER
-1025
-526
-1235
-559
+813
+525
+1023
+558
 extraction-rate
 extraction-rate
 10
@@ -719,10 +969,10 @@ items
 HORIZONTAL
 
 SLIDER
-1024
-566
-1237
-599
+812
+565
+1025
+598
 manufacture-rate
 manufacture-rate
 10
@@ -759,10 +1009,10 @@ patients
 HORIZONTAL
 
 SLIDER
-1262
-528
-1485
-561
+1050
+527
+1273
+560
 admission-rate
 admission-rate
 10
@@ -774,10 +1024,10 @@ patients per tick
 HORIZONTAL
 
 SLIDER
-1263
-565
-1486
-598
+1051
+564
+1274
+597
 release-rate
 release-rate
 0
@@ -797,7 +1047,7 @@ ppe-capacity
 ppe-capacity
 0
 100
-36.0
+33.0
 1
 1
 PPEs
@@ -884,10 +1134,10 @@ items
 HORIZONTAL
 
 TEXTBOX
-1020
-504
-1170
-522
+808
+503
+958
+521
 Just for later (if ever)
 11
 15.0
@@ -1057,19 +1307,19 @@ Circle -7500403 true true 45 90 120
 Circle -7500403 true true 104 74 152
 
 truck
-false
+true
 0
-Rectangle -7500403 true true 4 45 195 187
-Polygon -7500403 true true 296 193 296 150 259 134 244 104 208 104 207 194
-Rectangle -1 true false 195 60 195 105
-Polygon -16777216 true false 238 112 252 141 219 141 218 112
-Circle -16777216 true false 234 174 42
-Rectangle -7500403 true true 181 185 214 194
-Circle -16777216 true false 144 174 42
-Circle -16777216 true false 24 174 42
-Circle -7500403 false true 24 174 42
-Circle -7500403 false true 144 174 42
-Circle -7500403 false true 234 174 42
+Rectangle -7500403 true true 45 105 187 296
+Polygon -7500403 true true 193 4 150 4 134 41 104 56 104 92 194 93
+Rectangle -1 true false 60 105 105 105
+Polygon -16777216 true false 112 62 141 48 141 81 112 82
+Circle -16777216 true false 174 24 42
+Rectangle -7500403 true true 185 86 194 119
+Circle -16777216 true false 174 114 42
+Circle -16777216 true false 174 234 42
+Circle -7500403 false true 174 234 42
+Circle -7500403 false true 174 114 42
+Circle -7500403 false true 174 24 42
 @#$#@#$#@
 NetLogo 6.2.0
 @#$#@#$#@
