@@ -344,6 +344,7 @@ to patient-move foreach sort patients [p ->
 
         set shape "circle"
         set color orange
+        hide-turtle
         let hosp_number 0
         ifelse [pycor] of patch-here = 3
         [
@@ -394,6 +395,7 @@ to patient-move foreach sort patients [p ->
                 ]
                 ; Set different visuals to discern
                 ; if the patient is rerouting
+                  show-turtle
                   set color red
                   set shape "square"
                   rt 180
