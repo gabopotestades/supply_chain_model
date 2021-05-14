@@ -98,6 +98,8 @@ to setup-patches
     (pxcor = -10 and pycor < 4 and pycor > -14) or
     ; right vertical road
     (pxcor = 10 and pycor < 4 and pycor > -14) or
+    ; patients road
+    (pxcor = 26 and pycor < 4 and pycor > -14) or
     ; top horizontal road
     (pycor = 3) or
     ; bottom horizontal road
@@ -108,7 +110,9 @@ to setup-patches
     (pxcor = -10 and pycor = 3) or
     (pxcor = -10 and pycor = -13) or
     (pxcor = 10 and pycor = 3) or
-    (pxcor = 10 and pycor = -13)
+    (pxcor = 10 and pycor = -13) or
+    (pxcor = 26 and pycor = 3) or
+    (pxcor = 26 and pycor = -13)
   ]
 
   ; Set patches to be traveled by the upper extractor
@@ -312,11 +316,13 @@ to setup-positions
 
       ifelse coin-flip?
       [
+        set start_patch patch 30 3
         setxy 30 3
         ; set heading towards turtle 4
         set destination patch 20 3
       ]
       [
+        set start_patch patch 30 -13
         setxy 30 -13
         ; set heading towards turtle 5
         set destination patch 20 -13
@@ -333,8 +339,11 @@ to patient-move foreach sort patients [p ->
 
   ask p [
 
-    ifelse (patch-here = destination) [
+    ifelse (patch-here = destination)
+    [
 
+        set shape "circle"
+        set color orange
         let hosp_number 0
         ifelse [pycor] of patch-here = 3
         [
@@ -363,20 +372,38 @@ to patient-move foreach sort patients [p ->
               ; only reroute the unhealthy patients
               if(color != green)
               [
-                ifelse (one-of hospitals with [patient_count < patient_capacity] = nobody)[
+                ifelse (one-of hospitals with [patient_count < patient_capacity] = nobody)
+                [
                   set health (health - 1)
                   death
                 ]
                 [
-                  set destination [patch xcor ycor] of one-of hospitals with [patient_count < patient_capacity]
-                  set heading towards one-of hospitals-on destination
+                  ; set destination [patch xcor ycor] of one-of hospitals with [patient_count < patient_capacity]
+                  ; set heading towards one-of hospitals-on destination
+
+                ; Change the start_patch and destination
+                ; To be used for rotation when rerouting
+                ifelse [pycor] of patch-here = 3
+                [
+                  set start_patch patch 30 3
+                  set destination patch 20 -13
+                ]
+                [
+                  set start_patch patch 30 -13
+                  set destination patch 20 3
+                ]
+                ; Set different visuals to discern
+                ; if the patient is rerouting
+                  set color red
+                  set shape "square"
+                  rt 180
                   forward 1
+
                 ]
               ]
             ]
           ]
 
-          ; else lipat hospital
         ]
 
       ; coin-flip if the patient will get healthy or not
@@ -390,13 +417,71 @@ to patient-move foreach sort patients [p ->
         ]
 
       ]
+
     ]
+
     [
+      rotate-moving-patient
       forward 1
+      display
     ]
 
   ]
 ]
+end
+
+; Allows the patient to rotate on roads while rerouting
+to rotate-moving-patient ; patient procedure
+
+  let x_start [pxcor] of start_patch
+  let y_start [pycor] of start_patch
+  let x_dest  [pxcor] of destination
+  let y_dest  [pycor] of destination
+  let x_cur   [pxcor] of patch-here
+  let y_cur   [pycor] of patch-here
+
+    if
+    (
+      ; Check if the current patch is an intersection
+      (member? patch-here intersections) and
+      (y_start != y_dest)
+    )
+    [
+      ;; COORDINATES GUIDE ;;
+      (
+      ifelse
+      ( y_dest != y_cur) ; Horizontal lane
+      [
+        (
+         ifelse
+         y_dest = -13 and y_cur = 3 ; From top hospital going to the bottom hospital
+         [
+            rt 90
+         ]
+         y_dest = 3 and y_cur = -13 ; From bottom hospital going to the top hospital
+         [
+            rt -90
+         ]
+        )
+      ]
+      (y_dest = y_cur) ; Vertical lane
+      [
+        (
+          ifelse
+          y_dest = -13 and y_start = 3 ; From the top hospital going to the bottom hospital
+          [
+            rt 90
+          ]
+          y_dest = 3 and y_start = -13 ; From the bottom hospital going to the top hospital
+          [
+            rt -90
+          ]
+        )
+      ]
+      )
+
+    ]
+
 end
 
 ; Discharge if a patient is in the hospital
@@ -450,23 +535,26 @@ to spawn-patient
 
   if coin-flip?
   [
-    create-patients 1 [
-    set size 1
-    set color orange
-    ifelse coin-flip?
+    create-patients 1
     [
-      setxy 30 3
-      set destination patch 20 3
+      set size 1
+      set color orange
+      ifelse coin-flip?
+      [
+        set start_patch patch 30 3
+        setxy 30 3
+        set destination patch 20 3
+      ]
+      [
+        set start_patch patch 30 -13
+        setxy 30 -13
+        set destination patch 20 -13
+      ]
+      set health initial-health
+      set heading -90
+      ; set destination [patch xcor ycor] of one-of hospitals
+      ; set heading towards one-of hospitals-on destination
     ]
-    [
-      setxy 30 -13
-      set destination patch 20 -13
-    ]
-    set health initial-health
-    set heading -90
-    ; set destination [patch xcor ycor] of one-of hospitals
-    ; set heading towards one-of hospitals-on destination
-
   ]
 
 
@@ -1008,7 +1096,7 @@ patient-capacity
 patient-capacity
 10
 100
-100.0
+20.0
 1
 1
 patients
@@ -1301,6 +1389,11 @@ Polygon -7500403 true true 105 90 120 195 90 285 105 300 135 300 150 225 165 300
 Rectangle -7500403 true true 127 79 172 94
 Polygon -7500403 true true 195 90 240 150 225 180 165 105
 Polygon -7500403 true true 105 90 60 150 75 180 135 105
+
+square
+false
+0
+Rectangle -7500403 true true 30 30 270 270
 
 tree
 false
