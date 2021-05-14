@@ -22,7 +22,6 @@ extr-transporters-own[
   load_capacity
   delivery_speed
   current_load
-  heading_towards
   start_patch
   destination
 ]
@@ -36,20 +35,20 @@ hosp-transporters-own[
 extractors-own[
   extractor_capacity
   raw_material_1_count
-  raw_material_1_type
-
   raw_material_2_count
-  raw_material_2_type
-
   raw_material_3_count
-  raw_material_3_type
-
   raw_material_4_count
-  raw_material_4_type
 ]
 manufacturers-own[
   warehouse_capacity
-  manufacturing_rate
+  raw_material_1_count
+  raw_material_2_count
+  raw_material_3_count
+  raw_material_4_count
+  glove_stock
+  ppe_stock
+  mask_stock
+  syringe_stock
   current_inven
 ]
 hospitals-own[
@@ -200,13 +199,13 @@ to setup-agents
     set health initial-health
   ]
 
-  create-extr-transporters (transporter_multiplier * 2)[
+  create-extr-transporters (transporter-multiplier * 2)[
     set size  2
     set color red
     set load_capacity load-capacity
   ]
 
-  create-hosp-transporters (transporter_multiplier * 2)[
+  create-hosp-transporters (transporter-multiplier * 2)[
     set size  2
     set color blue
     set load_capacity load-capacity
@@ -928,6 +927,13 @@ to extract ; extractor procedure
 
 end
 
+; Allows the manufacturers to create products
+; depending on the available raw materials
+to manufacture ; manufacturer procedure
+
+
+end
+
 ; function to kill a patient if health reaches 0
 to death
   if health < 0 [die]
@@ -937,6 +943,7 @@ end
 to go
   extract
   transport
+  manufacture
   patient-move
   spawn-patient
   discharge-patients
@@ -971,10 +978,10 @@ ticks
 30.0
 
 BUTTON
-356
-392
-420
-425
+304
+278
+368
+311
 Setup
 setup
 NIL
@@ -988,10 +995,10 @@ NIL
 1
 
 BUTTON
-439
-392
-502
-425
+387
+278
+450
+311
 Go
 go
 T
@@ -1009,8 +1016,8 @@ SLIDER
 77
 230
 110
-transporter_multiplier
-transporter_multiplier
+transporter-multiplier
+transporter-multiplier
 1
 10
 7.0
@@ -1061,9 +1068,9 @@ HORIZONTAL
 
 TEXTBOX
 15
-121
+126
 165
-139
+144
 Extractor variables
 11
 0.0
@@ -1078,17 +1085,17 @@ manufacturer-capacity
 manufacturer-capacity
 10
 100
-76.0
+100.0
 1
 1
 items
 HORIZONTAL
 
 SLIDER
-812
-565
-1025
-598
+264
+76
+484
+109
 manufacture-rate
 manufacture-rate
 10
@@ -1100,9 +1107,9 @@ items per tick
 HORIZONTAL
 
 TEXTBOX
-272
+265
 10
-422
+415
 28
 Manufacturer variables
 11
@@ -1193,7 +1200,7 @@ glove-capacity
 glove-capacity
 0
 100
-31.0
+33.0
 1
 1
 gloves
@@ -1225,9 +1232,9 @@ Hospital variables
 1
 
 TEXTBOX
-14
 10
-164
+10
+160
 28
 Transporter variables
 11
@@ -1250,30 +1257,30 @@ items
 HORIZONTAL
 
 TEXTBOX
-844
-536
-994
-554
+901
+560
+1051
+578
 Just for later (if ever)
 11
 15.0
 1
 
 TEXTBOX
-267
-122
-417
-140
+265
+126
+415
+144
 Patient variables
 11
 0.0
 1
 
 SLIDER
-262
-139
-488
-172
+263
+141
+484
+174
 initial-health
 initial-health
 0
