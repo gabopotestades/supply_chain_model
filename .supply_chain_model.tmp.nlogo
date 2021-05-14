@@ -535,7 +535,7 @@ to spawn-patient
 
   if coin-flip?
   [
-    create-patients 1
+    create-patients
     [
       set size 1
       set color orange
