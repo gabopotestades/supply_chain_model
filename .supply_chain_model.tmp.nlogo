@@ -450,24 +450,23 @@ to spawn-patient
 
   if coin-flip?
   [
-    create-patients 1
+    create-patients 1 [
+    set size 1
+    set color orange
+    ifelse coin-flip?
     [
-      set size 1
-      set color orange
-      ifelse coin-flip?
-      [
-        setxy 30 3
-        set destination patch 20 3
-      ]
-      [
-        setxy 30 -13
-        set destination patch 20 -13
-      ]
-      set health initial-health
-      set heading -90
-      ; set destination [patch xcor ycor] of one-of hospitals
-      ; set heading towards one-of hospitals-on destination
+      setxy 30 3
+      set destination patch 20 3
     ]
+    [
+      setxy 30 -13
+      set destination patch 20 -13
+    ]
+    set health initial-health
+    set heading -90
+    ; set destination [patch xcor ycor] of one-of hospitals
+    ; set heading towards one-of hospitals-on destination
+
   ]
 
 
