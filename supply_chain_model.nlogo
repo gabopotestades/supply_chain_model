@@ -35,7 +35,6 @@ hosp-transporters-own[
 ]
 extractors-own[
   extractor_capacity
-  extraction_rate
   raw_material_1_count
   raw_material_1_type
 
@@ -893,17 +892,38 @@ to extract ; extractor procedure
 
   ask extractors
   [
+    ; Extract each raw material individually
+    let extracted_1 random extraction-rate-prob
+    let extracted_2 random extraction-rate-prob
+    let extracted_3 random extraction-rate-prob
+    let extracted_4 random extraction-rate-prob
+
+    ; Add the extracted to the current count per raw material
+    set raw_material_1_count (raw_material_1_count + extracted_1)
+    set raw_material_2_count (raw_material_2_count + extracted_2)
+    set raw_material_3_count (raw_material_3_count + extracted_3)
+    set raw_material_4_count (raw_material_4_count + extracted_4)
+
+    ; If the current count is greater than capacity, limit to capacity
+    if raw_material_1_count > extractor-capacity [set raw_material_1_count extractor-capacity]
+    if raw_material_2_count > extractor-capacity [set raw_material_2_count extractor-capacity]
+    if raw_material_3_count > extractor-capacity [set raw_material_3_count extractor-capacity]
+    if raw_material_4_count > extractor-capacity [set raw_material_4_count extractor-capacity]
+
+    ; Turn around if the current location is at the edge
     if patch-ahead 1 = nobody or [pcolor] of patch-ahead 1 != grey + 2
     [
       rt 180
     ]
 
+    ; Move every 10 seconds
     if ticks mod 10 = 0
     [
       rt random 40
       lt random 40
       fd 0.5
     ]
+
   ]
 
 end
@@ -915,8 +935,8 @@ end
 
 ; Function at each time step (tick)
 to go
-  transport
   extract
+  transport
   patient-move
   spawn-patient
   discharge-patients
@@ -951,10 +971,10 @@ ticks
 30.0
 
 BUTTON
-371
-445
-435
-478
+356
+392
+420
+425
 Setup
 setup
 NIL
@@ -968,10 +988,10 @@ NIL
 1
 
 BUTTON
-454
-445
-517
-478
+439
+392
+502
+425
 Go
 go
 T
@@ -985,10 +1005,10 @@ NIL
 1
 
 SLIDER
-13
-32
-217
-65
+10
+77
+230
+110
 transporter_multiplier
 transporter_multiplier
 1
@@ -1000,10 +1020,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-117
-15
-218
-33
+130
+60
+231
+78
 will be multiplied to 2
 11
 0.0
@@ -1011,49 +1031,49 @@ will be multiplied to 2
 
 SLIDER
 10
-102
-231
-135
+142
+230
+175
 extractor-capacity
 extractor-capacity
 10
 100
-34.0
+100.0
 1
 1
-items
+per item
 HORIZONTAL
 
 SLIDER
-813
-525
-1023
-558
-extraction-rate
-extraction-rate
 10
-100
-50.0
+181
+230
+214
+extraction-rate-prob
+extraction-rate-prob
+2
+10
+6.0
 1
 1
-items per tick
+per item
 HORIZONTAL
 
 TEXTBOX
 15
-81
+121
 165
-99
+139
 Extractor variables
 11
 0.0
 1
 
 SLIDER
-279
-109
-499
-142
+264
+25
+484
+58
 manufacturer-capacity
 manufacturer-capacity
 10
@@ -1080,20 +1100,20 @@ items per tick
 HORIZONTAL
 
 TEXTBOX
-288
-90
-438
-108
+272
+10
+422
+28
 Manufacturer variables
 11
 0.0
 1
 
 SLIDER
-11
-162
-233
-195
+10
+241
+230
+274
 patient-capacity
 patient-capacity
 10
@@ -1135,10 +1155,10 @@ patients per tick
 HORIZONTAL
 
 SLIDER
-10
-297
-233
-330
+8
+369
+231
+402
 ppe-capacity
 ppe-capacity
 0
@@ -1150,10 +1170,10 @@ PPEs
 HORIZONTAL
 
 SLIDER
-8
-206
+10
+285
 230
-239
+318
 mask-capacity
 mask-capacity
 0
@@ -1165,10 +1185,10 @@ masks
 HORIZONTAL
 
 SLIDER
-9
-344
-233
-377
+8
+411
+232
+444
 glove-capacity
 glove-capacity
 0
@@ -1180,10 +1200,10 @@ gloves
 HORIZONTAL
 
 SLIDER
-7
-250
+9
+327
 230
-283
+360
 syringe-capacity
 syringe-capacity
 0
@@ -1195,30 +1215,30 @@ syringes
 HORIZONTAL
 
 TEXTBOX
-16
-144
-166
-162
+15
+223
+165
+241
 Hospital variables
 11
 0.0
 1
 
 TEXTBOX
-285
-156
-435
-174
+14
+10
+164
+28
 Transporter variables
 11
 0.0
 1
 
 SLIDER
-281
-172
-501
-205
+10
+26
+230
+59
 load-capacity
 load-capacity
 0
@@ -1230,30 +1250,30 @@ items
 HORIZONTAL
 
 TEXTBOX
-808
-503
-958
-521
+844
+536
+994
+554
 Just for later (if ever)
 11
 15.0
 1
 
 TEXTBOX
-286
-214
-436
-232
+267
+122
+417
+140
 Patient variables
 11
 0.0
 1
 
 SLIDER
-281
-231
-507
-264
+262
+139
+488
+172
 initial-health
 initial-health
 0
