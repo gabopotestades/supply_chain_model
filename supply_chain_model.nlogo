@@ -19,16 +19,20 @@ breed [hosp-transporters hs-truck]
 
 ; Initialize internal values per breed
 extr-transporters-own[
-  load_capacity
   delivery_speed
-  current_load
+  raw_material_1_count
+  raw_material_2_count
+  raw_material_3_count
+  raw_material_4_count
   start_patch
   destination
 ]
 hosp-transporters-own[
-  load_capacity
   delivery_speed
-  current_load
+  raw_material_1_count
+  raw_material_2_count
+  raw_material_3_count
+  raw_material_4_count
   start_patch
   destination
 ]
@@ -49,7 +53,6 @@ manufacturers-own[
   ppe_stock
   mask_stock
   syringe_stock
-  current_inven
 ]
 hospitals-own[
   patient_capacity
@@ -202,15 +205,12 @@ to setup-agents
   create-extr-transporters (transporter-multiplier * 2)[
     set size  2
     set color red
-    set load_capacity load-capacity
   ]
 
   create-hosp-transporters (transporter-multiplier * 2)[
     set size  2
     set color blue
-    set load_capacity load-capacity
   ]
-
 
 end
 
@@ -753,62 +753,177 @@ to rotate-hosp-transporters ;  hosp-transporter procedure
 
 end
 
-; Allows the transporters to move
-to transport ; transporter procedure
+; Allows the extractor transporters to move
+to extractor-transport ; extractor transporter procedure
 
   ; Transports the raw materials to the manufacturer
   ask extr-transporters[
-    let temp_dest 0
 
     ; If the tranporter reached its destination
-    if (patch-here = destination) [
+    if (patch-here = destination)
+    [
 
-      set temp_dest (destination)
+      let tran_cur_raw_mat1_count raw_material_1_count
+      let tran_cur_raw_mat2_count raw_material_2_count
+      let tran_cur_raw_mat3_count raw_material_3_count
+      let tran_cur_raw_mat4_count raw_material_4_count
+
+      let temp_dest (destination)
       set destination (start_patch)
       set start_patch (temp_dest)
 
-      ; Check if y-coordinate is 3 (upper extractor)
-      ; or -13 (lower extractor)
-      if (member? patch-here extractor-pick-ups)
-      [
-        let extractor_number 0
-        ifelse [pycor] of patch-here = 3
+      (
+
+        ; Check if y-coordinate is 3 (upper extractor)
+        ; or -13 (lower extractor)
+        ifelse
+        (member? patch-here extractor-pick-ups)
         [
-          set extractor_number 0
-        ]
+
+          let extractor_number 0
+          ifelse [pycor] of patch-here = 3
+          [ set extractor_number 0 ]
+          [ set extractor_number 1 ]
+
+          ; Set the temporary raw materials values available to get
+          let raw_mat1_to_get (load-capacity - raw_material_1_count)
+          let raw_mat2_to_get (load-capacity - raw_material_2_count)
+          let raw_mat3_to_get (load-capacity - raw_material_3_count)
+          let raw_mat4_to_get (load-capacity - raw_material_4_count)
+
+          ask extractor extractor_number
+          [
+            ; Get the raw materials from the extractors
+            ; Ensures that the raw material to get is not more than the available
+            ; raw material in the extractor
+            ifelse raw_mat1_to_get <= raw_material_1_count
+            [ set raw_material_1_count (raw_material_1_count - raw_mat1_to_get) ]
+            [
+              set raw_mat1_to_get raw_material_1_count
+              set raw_material_1_count 0
+            ]
+
+            ifelse raw_mat2_to_get <= raw_material_2_count
+            [ set raw_material_2_count (raw_material_2_count - raw_mat2_to_get) ]
+            [
+              set raw_mat2_to_get raw_material_2_count
+              set raw_material_2_count 0
+            ]
+
+            ifelse raw_mat3_to_get <= raw_material_3_count
+            [ set raw_material_3_count (raw_material_3_count - raw_mat3_to_get) ]
+            [
+              set raw_mat3_to_get raw_material_3_count
+              set raw_material_3_count 0
+            ]
+
+            ifelse raw_mat4_to_get <= raw_material_4_count
+            [ set raw_material_4_count (raw_material_4_count - raw_mat4_to_get) ]
+            [
+              set raw_mat4_to_get raw_material_4_count
+              set raw_material_4_count 0
+            ]
+
+         ]
+
+          ; After getting the raw materials,
+          ; store in the transporter's value
+          set raw_material_1_count raw_mat1_to_get
+          set raw_material_2_count raw_mat2_to_get
+          set raw_material_3_count raw_mat3_to_get
+          set raw_material_4_count raw_mat4_to_get
+
+       ]
+
+        ; Check if y-coordinate is 3 (upper manufacturer)
+        ; or -13 (lower manufacturer)
+        (member? patch-here manufacturer-drop-offs)
         [
-          set extractor_number 1
+
+          let manuf_number 0
+          ifelse [pycor] of patch-here = 3
+          [ set manuf_number 2 ]
+          [ set manuf_number 3 ]
+
+          ; Set the temporary raw materials values available to get
+          let raw_mat1_to_give raw_material_1_count
+          let raw_mat2_to_give raw_material_2_count
+          let raw_mat3_to_give raw_material_3_count
+          let raw_mat4_to_give raw_material_4_count
+
+          ask factory manuf_number
+          [
+
+            ; Add current inventory to the manufacturer destination
+            let cur_raw_mat1 raw_material_1_count
+            let cur_raw_mat2 raw_material_2_count
+            let cur_raw_mat3 raw_material_3_count
+            let cur_raw_mat4 raw_material_4_count
+
+            ;;;;;;;;;;;;;;;;;;;;
+            ;; Raw Material 1 ;;
+            ;;;;;;;;;;;;;;;;;;;;
+            ifelse ( raw_mat1_to_give + cur_raw_mat1 ) <= manufacturer-capacity
+            [
+              set raw_material_1_count ( raw_mat1_to_give + cur_raw_mat1 ) ; add raw material, limit is the manufacturer capacity
+              set raw_mat1_to_give 0
+            ]
+            [
+              set raw_material_1_count manufacturer-capacity ; considered as full
+              set raw_mat1_to_give ( raw_mat1_to_give - ( manufacturer-capacity - cur_raw_mat1 ) )
+            ]
+
+            ;;;;;;;;;;;;;;;;;;;;
+            ;; Raw Material 2 ;;
+            ;;;;;;;;;;;;;;;;;;;;
+            ifelse ( raw_mat2_to_give + cur_raw_mat2 ) <= manufacturer-capacity
+            [
+              set raw_material_2_count ( raw_mat2_to_give + cur_raw_mat2 ) ; add raw material, limit is the manufacturer capacity
+              set raw_mat2_to_give 0
+            ]
+            [
+              set raw_material_2_count manufacturer-capacity ; considered as full
+              set raw_mat2_to_give ( raw_mat2_to_give - ( manufacturer-capacity - cur_raw_mat2 ) )
+            ]
+
+            ;;;;;;;;;;;;;;;;;;;;
+            ;; Raw Material 3 ;;
+            ;;;;;;;;;;;;;;;;;;;;
+            ifelse ( raw_mat3_to_give + cur_raw_mat3 ) <= manufacturer-capacity
+            [
+              set raw_material_3_count ( raw_mat3_to_give + cur_raw_mat3 ) ; add raw material, limit is the manufacturer capacity
+              set raw_mat3_to_give 0
+            ]
+            [
+              set raw_material_3_count manufacturer-capacity ; considered as full
+              set raw_mat3_to_give ( raw_mat3_to_give - ( manufacturer-capacity - cur_raw_mat3 ) )
+            ]
+
+            ;;;;;;;;;;;;;;;;;;;;
+            ;; Raw Material 4 ;;
+            ;;;;;;;;;;;;;;;;;;;;
+            ifelse ( raw_mat4_to_give + cur_raw_mat4 ) <= manufacturer-capacity
+            [
+              set raw_material_4_count ( raw_mat4_to_give + cur_raw_mat4 ) ; add raw material, limit is the manufacturer capacity
+              set raw_mat4_to_give 0
+            ]
+            [
+              set raw_material_4_count manufacturer-capacity ; considered as full
+              set raw_mat4_to_give ( raw_mat4_to_give - ( manufacturer-capacity - cur_raw_mat4 ) )
+            ]
+
+          ]
+
+          ; raw_mat_to_give becomes the remaining
+          ; raw material of the transporter
+          set raw_material_1_count (raw_mat1_to_give)
+          set raw_material_2_count (raw_mat2_to_give)
+          set raw_material_3_count (raw_mat3_to_give)
+          set raw_material_4_count (raw_mat4_to_give)
+
         ]
 
-        ask extractor extractor_number [
-          ; Get the raw materials from the extractors
-          set raw_material_1_count (raw_material_1_count - 1)
-          set raw_material_2_count (raw_material_2_count - 1)
-          set raw_material_3_count (raw_material_3_count - 1)
-          set raw_material_4_count (raw_material_4_count - 1)
-        ]
-
-      ]
-
-      ; Check if y-coordinate is 3 (upper manufacturer)
-      ; or -13 (lower manufacturer)
-      if (member? patch-here manufacturer-drop-offs)
-      [
-        let manuf_number 0
-        ifelse [pycor] of patch-here = 3
-        [
-          set manuf_number 2
-        ]
-        [
-          set manuf_number 3
-        ]
-
-        ask factory manuf_number [
-           ; Add current inventory to the manufacturer destination
-           set current_inven (current_inven + 1)
-        ]
-
-      ]
+      )
 
       ; Rotate to go back
       rt 180
@@ -821,6 +936,11 @@ to transport ; transporter procedure
     forward 1
     display
   ]
+
+end
+
+; Allows the hospital transporters to move
+to hospital-transport ; hospital transporter procedure
 
   ; Transports the manufactured goods to the hospitals
   ask hosp-transporters[
@@ -869,7 +989,6 @@ to transport ; transporter procedure
 
         ask factory manuf_number [
            ; Add current inventory to the manufacturer destination
-           set current_inven (current_inven - 1)
         ]
 
       ]
@@ -941,13 +1060,24 @@ end
 
 ; Function at each time step (tick)
 to go
+
+  ; Extractor procedure
   extract
-  transport
+
+  ; Transporter procedure
+  extractor-transport
+  hospital-transport
+
+  ; Manufacturer procedures
   manufacture
+
+  ; Patient procedures
   patient-move
   spawn-patient
   discharge-patients
+
   tick
+
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -994,23 +1124,6 @@ NIL
 NIL
 1
 
-BUTTON
-387
-278
-450
-311
-Go
-go
-T
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 SLIDER
 10
 77
@@ -1020,7 +1133,7 @@ transporter-multiplier
 transporter-multiplier
 1
 10
-7.0
+1.0
 1
 1
 NIL
@@ -1248,12 +1361,12 @@ SLIDER
 59
 load-capacity
 load-capacity
-0
+1
 100
-35.0
+50.0
 1
 1
-items
+per item
 HORIZONTAL
 
 TEXTBOX
@@ -1290,6 +1403,23 @@ initial-health
 1
 NIL
 HORIZONTAL
+
+BUTTON
+387
+278
+450
+311
+Go
+go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
