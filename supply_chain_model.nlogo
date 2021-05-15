@@ -1050,6 +1050,63 @@ end
 ; depending on the available raw materials
 to manufacture ; manufacturer procedure
 
+  ask manufacturers
+  [
+
+    if ; Create a pair of gloves
+    raw_material_1_count >= 5 and
+    raw_material_2_count >= 1 and
+    raw_material_3_count >= 2 and
+    raw_material_4_count >= 4
+    [
+      set glove_stock (glove_stock + 1)
+      set raw_material_1_count ( raw_material_1_count - 5 )
+      set raw_material_2_count ( raw_material_2_count - 1 )
+      set raw_material_3_count ( raw_material_3_count - 2 )
+      set raw_material_4_count ( raw_material_4_count - 4 )
+    ]
+
+    if ; Create a PPE
+    raw_material_1_count >= 5 and
+    raw_material_2_count >= 5 and
+    raw_material_3_count >= 5 and
+    raw_material_4_count >= 2
+    [
+      set ppe_stock (ppe_stock + 1)
+      set raw_material_1_count ( raw_material_1_count - 5 )
+      set raw_material_2_count ( raw_material_2_count - 5 )
+      set raw_material_3_count ( raw_material_3_count - 5 )
+      set raw_material_4_count ( raw_material_4_count - 2 )
+    ]
+
+    if ; Create a mask
+    raw_material_1_count >= 2 and
+    raw_material_2_count >= 2 and
+    raw_material_3_count >= 5 and
+    raw_material_4_count >= 2
+    [
+      set mask_stock (ppe_stock + 1)
+      set raw_material_1_count ( raw_material_1_count - 2 )
+      set raw_material_2_count ( raw_material_2_count - 2 )
+      set raw_material_3_count ( raw_material_3_count - 5 )
+      set raw_material_4_count ( raw_material_4_count - 2 )
+    ]
+
+
+    if ; Create a syringe
+    raw_material_1_count >= 1 and
+    raw_material_2_count >= 5 and
+    raw_material_3_count >= 5 and
+    raw_material_4_count >= 1
+    [
+      set syringe_stock (syringe_stock + 1)
+      set raw_material_1_count ( raw_material_1_count - 1 )
+      set raw_material_2_count ( raw_material_2_count - 5 )
+      set raw_material_3_count ( raw_material_3_count - 5 )
+      set raw_material_4_count ( raw_material_4_count - 1 )
+    ]
+
+  ]
 
 end
 
@@ -1064,12 +1121,14 @@ to go
   ; Extractor procedure
   extract
 
-  ; Transporter procedure
+  ; Extractor Transporter procedures
   extractor-transport
-  hospital-transport
 
   ; Manufacturer procedures
   manufacture
+
+  ; Hospital Transporter procedures
+  hospital-transport
 
   ; Patient procedures
   patient-move
@@ -1211,9 +1270,9 @@ SLIDER
 109
 manufacture-rate
 manufacture-rate
-10
+1
 100
-50.0
+1.0
 1
 1
 items per tick
@@ -1411,7 +1470,7 @@ BUTTON
 311
 Go
 go
-NIL
+T
 1
 T
 OBSERVER
