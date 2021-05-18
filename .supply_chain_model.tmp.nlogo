@@ -207,14 +207,13 @@ to setup-agents
     set size  2
     set color red
     set load_capacity load-capacity
-    set transport_rate transport-rate
+    set tr
   ]
 
   create-hosp-transporters (transporter_multiplier * 2)[
     set size  2
     set color blue
     set load_capacity load-capacity
-    set transport_rate transport-rate
   ]
 
 
