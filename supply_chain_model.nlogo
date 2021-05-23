@@ -363,7 +363,7 @@ to patient-move foreach sort patients [p ->
           ; if there is a slot in the current hospital, admit self
           ifelse ((patient_count + 1) <= patient-capacity)
           [
-            ;print "admitting patient"
+            print "admitting patient"
             set patient_count patient_count + 1
             ask p [
               set color green
@@ -374,27 +374,11 @@ to patient-move foreach sort patients [p ->
             ; else reroute the patient to another hospital
             ask p
             [
+              set color orange
               ; only reroute the patients that are not healing
               if(color != green)
               [
                 ; try to reroute even if the other hospital is full,
-                ;ifelse (one-of hospitals with [patient_count < patient-capacity] = nobody)
-                ;[
-                  ;print "no other hospitals with vacancies. waiting to die."
-                  set health (health - 1)
-                  death
-                  if (health = 0)
-                  [
-                    ask hospital hosp_number
-                    [
-                      ;print "patient died from waiting"
-                      set patient_count patient_count - 1
-                    ]
-                  ]
-                ;]
-                ;[
-                  ; set destination [patch xcor ycor] of one-of hospitals with [patient_count < patient-capacity]
-                  ; set heading towards one-of hospitals-on destination
 
                 ; Change the start_patch and destination
                 ; To be used for rotation when rerouting
@@ -410,13 +394,18 @@ to patient-move foreach sort patients [p ->
                 ]
                 ; Set different visuals to discern
                 ; if the patient is rerouting
-                  ;print "moving to another hospital"
+                  print "moving to another hospital"
+                  ask hospital hosp_number
+                    [
+                      ;print "patient died from waiting"
+                      set patient_count patient_count - 1
+                    ]
                   show-turtle
                   set color pink ; lol
                   set shape "square"
                   rt 180
                   ; add the chance that the patient will die in transport
-                  set health (health - 1)
+                  set health health - 1
                   death
                   forward 1
                 ]
