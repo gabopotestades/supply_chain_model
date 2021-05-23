@@ -330,25 +330,32 @@ to setup-positions
   ]
 end
 
-; Patients to move
+; Patients action each time step
 to patient-move foreach sort patients [p ->
-
+  ; for every patient
   ask p [
-
+    ; check if the patient is already at a hospital
     ifelse (patch-here = destination)
     [
+      ; if the patient is at a hospital,
+      let hosp_number 0
+      ; get which hospital the patient is at
+      ifelse [pycor] of patch-here = 3
+      [
+        set hosp_number 4
+      ]
+      [
+        set hosp_number 5
+      ]
 
         set shape "circle"
-        set color orange
-        hide-turtle
-        let hosp_number 0
-        ifelse [pycor] of patch-here = 3
+        ; only do the logic below if the patient is not yet admitted (color != green)
+        ifelse (color != green)
         [
-          set hosp_number 4
-        ]
-        [
-          set hosp_number 5
-        ]
+         ;set color orange
+
+        ; hide the turtle
+        ; hide-turtle
 
         ; increment patient count in the hospital if the patient is already in the hospital
         ask hospital hosp_number
@@ -356,39 +363,22 @@ to patient-move foreach sort patients [p ->
           ; if there is a slot in the current hospital, admit self
           ifelse ((patient_count + 1) <= patient-capacity)
           [
-
-            if(glove_stock > 0 and ppe_stock > 0 and mask_stock > 0 and syringe_stock > 0)
-            [
-              set patient_count (patient_count + 1)
-              ask p
-              [
-                set color green
-                ask hospital hosp_number
-                [
-                  set glove_stock glove_stock - 1
-                  set ppe_stock ppe_stock - 1
-                  set mask_stock mask_stock - 1
-                  set syringe_stock syringe_stock - 1
-                ]
+            print "admitting patient"
+            set patient_count patient_count + 1
+            ask p [
+              set color green
+              set size 1
             ]
-          ]
-
           ]
           [
             ; else reroute the patient to another hospital
             ask p
             [
-              ; only reroute the unhealthy patients
+              set color orange
+              ; only reroute the patients that are not healing
               if(color != green)
               [
-                ifelse (one-of hospitals with [patient_count < patient-capacity] = nobody)
-                [
-                  set health (health - 1)
-                  death
-                ]
-                [
-                  ; set destination [patch xcor ycor] of one-of hospitals with [patient_count < patient-capacity]
-                  ; set heading towards one-of hospitals-on destination
+                ; try to reroute even if the other hospital is full,
 
                 ; Change the start_patch and destination
                 ; To be used for rotation when rerouting
@@ -396,6 +386,7 @@ to patient-move foreach sort patients [p ->
                 [
                   set start_patch patch 30 3
                   set destination patch 20 -13
+
                 ]
                 [
                   set start_patch patch 30 -13
@@ -403,34 +394,86 @@ to patient-move foreach sort patients [p ->
                 ]
                 ; Set different visuals to discern
                 ; if the patient is rerouting
+                  print "moving to another hospital"
+                  ask hospital hosp_number
+                    [
+                      ;print "patient died from waiting"
+                      set patient_count patient_count - 1
+                    ]
                   show-turtle
-                  set color red
+                  set color pink ; lol
                   set shape "square"
                   rt 180
                   ; add the chance that the patient will die in transport
-                  set health (health - 1)
+                  set health health - 1
                   death
                   forward 1
-
                 ]
               ]
             ]
           ]
 
-        ]
-
-      ; coin-flip if the patient will get healthy or not
-      if coin-flip?
-      [
-        ; not green = not healthy
-        if (color != green)
-        [
-          set health (health - 1)
-          death
-        ]
 
       ]
+      [
+        ; these agents are already at the hospital but there is a chance that they are not yet admitted
+        ask hospital hosp_number
+        [
+          ; further check if there are stocks
+          ifelse(glove_stock > 0 and ppe_stock > 0 and mask_stock > 0 and syringe_stock > 0)
+            [
+              ask p
+              [
+                ; set the patient's color to green (healing)
+                set color green
+                ifelse (health >= 90)
+                [
+                  print "now healthy, discharging patient alive"
+                  die
+                  ; discharge alive
+                  ask hospital hosp_number
+                  [
+                    set patient_count patient_count - 1
+                  ]
+                ]
+                [
+                  ; decrement hospital stock at each time step for each patient
+                  ask hospital hosp_number
+                  [
+                    set glove_stock glove_stock - 1
+                    set ppe_stock ppe_stock - 1
+                    set mask_stock mask_stock - 1
+                    set syringe_stock syringe_stock - 1
+                  ]
+                  ; and heal the patient
+                  print "HEALING THE PATIENT"
+                  set health health + 1
+                ]
+              ]
+          ]
+          [
+            ; if admitted but no stocks, decrease health
+            ask p
+            [
+              ;print "admitted but no stock of medical equipment. decreasing health"
+              set color orange
 
+
+              set health health - 1
+              death
+              if (health = 0)
+              [
+                ;print "admitted but died because no stock of medical equipment"
+                ; discharge dead
+                ask hospital hosp_number
+                [
+                   set patient_count patient_count - 1
+                ]
+              ]
+            ]
+          ]
+        ]
+      ]
     ]
 
     [
@@ -497,52 +540,6 @@ to rotate-moving-patient ; patient procedure
 
 end
 
-; Discharge if a patient is in the hospital
-to discharge-patients foreach sort patients [p ->
-  ask p [
-
-    if (patch-here = destination) [
-
-      let hosp_number 0
-        ifelse [pycor] of patch-here = 3
-        [
-          set hosp_number 4
-        ]
-        [
-          set hosp_number 5
-        ]
-        ask p
-        [
-          set health health + 1
-          if (health >= 90)
-          [
-            die
-            ask hospital hosp_number
-            [
-              set patient_count (patient_count - 1)
-            ]
-          ]
-
-        ]
-
-       if (color = green)
-        [
-
-          ; hide
-        ]
-    ]
-  ]
-]
-end
-
-; Admit a patient in the hospital if outside
-to admit-patient
-  if patient_count < patient-capacity
-  [
-    set patient_count patient_count + 1
-    ; how to stop patients from moving if ever while "getting treated" (?)
-  ]
-end
 
 ; Creates a patient in near the hospitals
 to spawn-patient
@@ -1251,6 +1248,7 @@ end
 ; function to kill a patient if health reaches 0
 to death
   if health < 0 [
+    ; count patients that died with color black
     set color black
     die
   ]
@@ -1276,7 +1274,6 @@ to go
   ; Patient procedures
   patient-move
   spawn-patient
-  discharge-patients
 
   tick
 
@@ -1310,10 +1307,10 @@ ticks
 30.0
 
 BUTTON
-363
-442
-427
-475
+364
+441
+428
+474
 Setup
 setup
 NIL
@@ -1455,7 +1452,7 @@ admission-rate
 admission-rate
 10
 100
-19.0
+10.0
 1
 1
 patients per tick
@@ -1600,7 +1597,7 @@ initial-health
 initial-health
 0
 100
-83.0
+10.0
 1
 1
 NIL
