@@ -514,8 +514,9 @@ to discharge-patients foreach sort patients [p ->
         ask p
         [
           set health health + 1
-          if (health >= 90 and color = green)
+          if (health >= 90)
           [
+            die
             ask hospital hosp_number
             [
               set patient_count (patient_count - 1)
@@ -1249,7 +1250,10 @@ end
 
 ; function to kill a patient if health reaches 0
 to death
-  if health < 0 [die]
+  if health < 0 [
+    set color black
+    die
+  ]
 
   ; here add a monitor based on the number of people that died
 end
@@ -1411,7 +1415,7 @@ manufacture-rate
 manufacture-rate
 1
 100
-1.0
+25.0
 1
 1
 items per tick
@@ -1451,7 +1455,7 @@ admission-rate
 admission-rate
 10
 100
-25.0
+19.0
 1
 1
 patients per tick
@@ -1466,7 +1470,7 @@ release-rate
 release-rate
 0
 100
-28.0
+37.0
 1
 1
 patients per tick
@@ -1596,7 +1600,7 @@ initial-health
 initial-health
 0
 100
-47.0
+83.0
 1
 1
 NIL
