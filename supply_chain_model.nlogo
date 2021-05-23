@@ -19,42 +19,42 @@ breed [hosp-transporters hs-truck]
 
 ; Initialize internal values per breed
 extr-transporters-own[
-  load_capacity
   delivery_speed
-  current_load
-  heading_towards
+  raw_material_1_count
+  raw_material_2_count
+  raw_material_3_count
+  raw_material_4_count
   start_patch
   destination
 ]
 hosp-transporters-own[
-  load_capacity
   delivery_speed
-  current_load
+  glove_stock
+  ppe_stock
+  mask_stock
+  syringe_stock
   start_patch
   destination
 ]
 extractors-own[
   extractor_capacity
-  extraction_rate
   raw_material_1_count
-  raw_material_1_type
-
   raw_material_2_count
-  raw_material_2_type
-
   raw_material_3_count
-  raw_material_3_type
-
   raw_material_4_count
-  raw_material_4_type
 ]
 manufacturers-own[
   warehouse_capacity
-  manufacturing_rate
-  current_inven
+  raw_material_1_count
+  raw_material_2_count
+  raw_material_3_count
+  raw_material_4_count
+  glove_stock
+  ppe_stock
+  mask_stock
+  syringe_stock
 ]
 hospitals-own[
-  patient_capacity
   patient_count
 
   glove_stock
@@ -98,6 +98,8 @@ to setup-patches
     (pxcor = -10 and pycor < 4 and pycor > -14) or
     ; right vertical road
     (pxcor = 10 and pycor < 4 and pycor > -14) or
+    ; patients road
+    (pxcor = 26 and pycor < 4 and pycor > -14) or
     ; top horizontal road
     (pycor = 3) or
     ; bottom horizontal road
@@ -108,7 +110,9 @@ to setup-patches
     (pxcor = -10 and pycor = 3) or
     (pxcor = -10 and pycor = -13) or
     (pxcor = 10 and pycor = 3) or
-    (pxcor = 10 and pycor = -13)
+    (pxcor = 10 and pycor = -13) or
+    (pxcor = 26 and pycor = 3) or
+    (pxcor = 26 and pycor = -13)
   ]
 
   ; Set patches to be traveled by the upper extractor
@@ -184,7 +188,6 @@ to setup-agents
     set size 12
     set color gray
     set patient_count 0
-    set patient_capacity patient-capacity
     set glove_capacity glove-capacity
     set ppe_capacity ppe-capacity
     set mask_capacity mask-capacity
@@ -197,18 +200,15 @@ to setup-agents
     set health initial-health
   ]
 
-  create-extr-transporters (transporter_multiplier * 2)[
+  create-extr-transporters (transporter-multiplier * 2)[
     set size  2
     set color red
-    set load_capacity load-capacity
   ]
 
-  create-hosp-transporters (transporter_multiplier * 2)[
+  create-hosp-transporters (transporter-multiplier * 2)[
     set size  2
     set color blue
-    set load_capacity load-capacity
   ]
-
 
 end
 
@@ -312,11 +312,13 @@ to setup-positions
 
       ifelse coin-flip?
       [
+        set start_patch patch 30 3
         setxy 30 3
         ; set heading towards turtle 4
         set destination patch 20 3
       ]
       [
+        set start_patch patch 30 -13
         setxy 30 -13
         ; set heading towards turtle 5
         set destination patch 20 -13
@@ -333,8 +335,12 @@ to patient-move foreach sort patients [p ->
 
   ask p [
 
-    ifelse (patch-here = destination) [
+    ifelse (patch-here = destination)
+    [
 
+        set shape "circle"
+        set color orange
+        hide-turtle
         let hosp_number 0
         ifelse [pycor] of patch-here = 3
         [
@@ -348,7 +354,7 @@ to patient-move foreach sort patients [p ->
         ask hospital hosp_number
         [
           ; if there is a slot in the current hospital, admit self
-          ifelse ((patient_count + 1) <= patient_capacity)
+          ifelse ((patient_count + 1) <= patient-capacity)
           [
             set patient_count (patient_count + 1)
             ask p
@@ -363,20 +369,39 @@ to patient-move foreach sort patients [p ->
               ; only reroute the unhealthy patients
               if(color != green)
               [
-                ifelse (one-of hospitals with [patient_count < patient_capacity] = nobody)[
+                ifelse (one-of hospitals with [patient_count < patient-capacity] = nobody)
+                [
                   set health (health - 1)
                   death
                 ]
                 [
-                  set destination [patch xcor ycor] of one-of hospitals with [patient_count < patient_capacity]
-                  set heading towards one-of hospitals-on destination
+                  ; set destination [patch xcor ycor] of one-of hospitals with [patient_count < patient-capacity]
+                  ; set heading towards one-of hospitals-on destination
+
+                ; Change the start_patch and destination
+                ; To be used for rotation when rerouting
+                ifelse [pycor] of patch-here = 3
+                [
+                  set start_patch patch 30 3
+                  set destination patch 20 -13
+                ]
+                [
+                  set start_patch patch 30 -13
+                  set destination patch 20 3
+                ]
+                ; Set different visuals to discern
+                ; if the patient is rerouting
+                  show-turtle
+                  set color red
+                  set shape "square"
+                  rt 180
                   forward 1
+
                 ]
               ]
             ]
           ]
 
-          ; else lipat hospital
         ]
 
       ; coin-flip if the patient will get healthy or not
@@ -390,13 +415,71 @@ to patient-move foreach sort patients [p ->
         ]
 
       ]
+
     ]
+
     [
+      rotate-moving-patient
       forward 1
+      display
     ]
 
   ]
 ]
+end
+
+; Allows the patient to rotate on roads while rerouting
+to rotate-moving-patient ; patient procedure
+
+  let x_start [pxcor] of start_patch
+  let y_start [pycor] of start_patch
+  let x_dest  [pxcor] of destination
+  let y_dest  [pycor] of destination
+  let x_cur   [pxcor] of patch-here
+  let y_cur   [pycor] of patch-here
+
+    if
+    (
+      ; Check if the current patch is an intersection
+      (member? patch-here intersections) and
+      (y_start != y_dest)
+    )
+    [
+      ;; COORDINATES GUIDE ;;
+      (
+      ifelse
+      ( y_dest != y_cur) ; Horizontal lane
+      [
+        (
+         ifelse
+         y_dest = -13 and y_cur = 3 ; From top hospital going to the bottom hospital
+         [
+            rt 90
+         ]
+         y_dest = 3 and y_cur = -13 ; From bottom hospital going to the top hospital
+         [
+            rt -90
+         ]
+        )
+      ]
+      (y_dest = y_cur) ; Vertical lane
+      [
+        (
+          ifelse
+          y_dest = -13 and y_start = 3 ; From the top hospital going to the bottom hospital
+          [
+            rt 90
+          ]
+          y_dest = 3 and y_start = -13 ; From the bottom hospital going to the top hospital
+          [
+            rt -90
+          ]
+        )
+      ]
+      )
+
+    ]
+
 end
 
 ; Discharge if a patient is in the hospital
@@ -438,7 +521,7 @@ end
 
 ; Admit a patient in the hospital if outside
 to admit-patient
-  if patient_count < patient_capacity
+  if patient_count < patient-capacity
   [
     set patient_count patient_count + 1
     ; how to stop patients from moving if ever while "getting treated" (?)
@@ -447,23 +530,32 @@ end
 
 ; Creates a patient in near the hospitals
 to spawn-patient
-    create-patients 1 [
-    set size 1
-    set color orange
-    ifelse coin-flip?
+
+  if coin-flip?
+  [
+    create-patients 1
     [
-      setxy 30 3
-      set destination patch 20 3
+      set size 1
+      set color orange
+      ifelse coin-flip?
+      [
+        set start_patch patch 30 3
+        setxy 30 3
+        set destination patch 20 3
+      ]
+      [
+        set start_patch patch 30 -13
+        setxy 30 -13
+        set destination patch 20 -13
+      ]
+      set health initial-health
+      set heading -90
+      ; set destination [patch xcor ycor] of one-of hospitals
+      ; set heading towards one-of hospitals-on destination
     ]
-    [
-      setxy 30 -13
-      set destination patch 20 -13
-    ]
-    set health initial-health
-    set heading -90
-    ; set destination [patch xcor ycor] of one-of hospitals
-    ; set heading towards one-of hospitals-on destination
   ]
+
+
 end
 
 ; Get the patch of a turtle
@@ -659,62 +751,178 @@ to rotate-hosp-transporters ;  hosp-transporter procedure
 
 end
 
-; Allows the transporters to move
-to transport ; transporter procedure
+; Allows the extractor transporters to move
+to extractor-transport ; extractor transporter procedure
 
   ; Transports the raw materials to the manufacturer
   ask extr-transporters[
-    let temp_dest 0
 
     ; If the tranporter reached its destination
-    if (patch-here = destination) [
+    if (patch-here = destination)
+    [
 
-      set temp_dest (destination)
+      let tran_cur_raw_mat1_count raw_material_1_count
+      let tran_cur_raw_mat2_count raw_material_2_count
+      let tran_cur_raw_mat3_count raw_material_3_count
+      let tran_cur_raw_mat4_count raw_material_4_count
+
+      ; Switch start patch and destination patch
+      let temp_dest (destination)
       set destination (start_patch)
       set start_patch (temp_dest)
 
-      ; Check if y-coordinate is 3 (upper extractor)
-      ; or -13 (lower extractor)
-      if (member? patch-here extractor-pick-ups)
-      [
-        let extractor_number 0
-        ifelse [pycor] of patch-here = 3
+      (
+
+        ; Check if y-coordinate is 3 (upper extractor)
+        ; or -13 (lower extractor)
+        ifelse
+        (member? patch-here extractor-pick-ups)
         [
-          set extractor_number 0
-        ]
+
+          let extractor_number 0
+          ifelse [pycor] of patch-here = 3
+          [ set extractor_number 0 ]
+          [ set extractor_number 1 ]
+
+          ; Set the temporary raw materials values available to get
+          let raw_mat1_to_get (load-capacity - raw_material_1_count)
+          let raw_mat2_to_get (load-capacity - raw_material_2_count)
+          let raw_mat3_to_get (load-capacity - raw_material_3_count)
+          let raw_mat4_to_get (load-capacity - raw_material_4_count)
+
+          ask extractor extractor_number
+          [
+            ; Get the raw materials from the extractors
+            ; Ensures that the raw material to get is not more than the available
+            ; raw material in the extractor
+            ifelse raw_mat1_to_get <= raw_material_1_count
+            [ set raw_material_1_count (raw_material_1_count - raw_mat1_to_get) ]
+            [
+              set raw_mat1_to_get raw_material_1_count
+              set raw_material_1_count 0
+            ]
+
+            ifelse raw_mat2_to_get <= raw_material_2_count
+            [ set raw_material_2_count (raw_material_2_count - raw_mat2_to_get) ]
+            [
+              set raw_mat2_to_get raw_material_2_count
+              set raw_material_2_count 0
+            ]
+
+            ifelse raw_mat3_to_get <= raw_material_3_count
+            [ set raw_material_3_count (raw_material_3_count - raw_mat3_to_get) ]
+            [
+              set raw_mat3_to_get raw_material_3_count
+              set raw_material_3_count 0
+            ]
+
+            ifelse raw_mat4_to_get <= raw_material_4_count
+            [ set raw_material_4_count (raw_material_4_count - raw_mat4_to_get) ]
+            [
+              set raw_mat4_to_get raw_material_4_count
+              set raw_material_4_count 0
+            ]
+
+         ]
+
+          ; After getting the raw materials,
+          ; store in the transporter's value
+          set raw_material_1_count raw_mat1_to_get
+          set raw_material_2_count raw_mat2_to_get
+          set raw_material_3_count raw_mat3_to_get
+          set raw_material_4_count raw_mat4_to_get
+
+       ]
+
+        ; Check if y-coordinate is 3 (upper manufacturer)
+        ; or -13 (lower manufacturer)
+        (member? patch-here manufacturer-drop-offs)
         [
-          set extractor_number 1
+
+          let manuf_number 0
+          ifelse [pycor] of patch-here = 3
+          [ set manuf_number 2 ]
+          [ set manuf_number 3 ]
+
+          ; Set the temporary raw materials values available to get
+          let raw_mat1_to_give raw_material_1_count
+          let raw_mat2_to_give raw_material_2_count
+          let raw_mat3_to_give raw_material_3_count
+          let raw_mat4_to_give raw_material_4_count
+
+          ask factory manuf_number
+          [
+
+            ; Add current inventory to the manufacturer destination
+            let cur_raw_mat1 raw_material_1_count
+            let cur_raw_mat2 raw_material_2_count
+            let cur_raw_mat3 raw_material_3_count
+            let cur_raw_mat4 raw_material_4_count
+
+            ;;;;;;;;;;;;;;;;;;;;
+            ;; Raw Material 1 ;;
+            ;;;;;;;;;;;;;;;;;;;;
+            ifelse ( raw_mat1_to_give + cur_raw_mat1 ) <= manufacturer-capacity
+            [
+              set raw_material_1_count ( raw_mat1_to_give + cur_raw_mat1 ) ; add raw material, limit is the manufacturer capacity
+              set raw_mat1_to_give 0
+            ]
+            [
+              set raw_material_1_count manufacturer-capacity ; considered as full
+              set raw_mat1_to_give ( raw_mat1_to_give - ( manufacturer-capacity - cur_raw_mat1 ) )
+            ]
+
+            ;;;;;;;;;;;;;;;;;;;;
+            ;; Raw Material 2 ;;
+            ;;;;;;;;;;;;;;;;;;;;
+            ifelse ( raw_mat2_to_give + cur_raw_mat2 ) <= manufacturer-capacity
+            [
+              set raw_material_2_count ( raw_mat2_to_give + cur_raw_mat2 ) ; add raw material, limit is the manufacturer capacity
+              set raw_mat2_to_give 0
+            ]
+            [
+              set raw_material_2_count manufacturer-capacity ; considered as full
+              set raw_mat2_to_give ( raw_mat2_to_give - ( manufacturer-capacity - cur_raw_mat2 ) )
+            ]
+
+            ;;;;;;;;;;;;;;;;;;;;
+            ;; Raw Material 3 ;;
+            ;;;;;;;;;;;;;;;;;;;;
+            ifelse ( raw_mat3_to_give + cur_raw_mat3 ) <= manufacturer-capacity
+            [
+              set raw_material_3_count ( raw_mat3_to_give + cur_raw_mat3 ) ; add raw material, limit is the manufacturer capacity
+              set raw_mat3_to_give 0
+            ]
+            [
+              set raw_material_3_count manufacturer-capacity ; considered as full
+              set raw_mat3_to_give ( raw_mat3_to_give - ( manufacturer-capacity - cur_raw_mat3 ) )
+            ]
+
+            ;;;;;;;;;;;;;;;;;;;;
+            ;; Raw Material 4 ;;
+            ;;;;;;;;;;;;;;;;;;;;
+            ifelse ( raw_mat4_to_give + cur_raw_mat4 ) <= manufacturer-capacity
+            [
+              set raw_material_4_count ( raw_mat4_to_give + cur_raw_mat4 ) ; add raw material, limit is the manufacturer capacity
+              set raw_mat4_to_give 0
+            ]
+            [
+              set raw_material_4_count manufacturer-capacity ; considered as full
+              set raw_mat4_to_give ( raw_mat4_to_give - ( manufacturer-capacity - cur_raw_mat4 ) )
+            ]
+
+          ]
+
+          ; raw_mat_to_give becomes the remaining
+          ; raw material of the transporter
+          set raw_material_1_count (raw_mat1_to_give)
+          set raw_material_2_count (raw_mat2_to_give)
+          set raw_material_3_count (raw_mat3_to_give)
+          set raw_material_4_count (raw_mat4_to_give)
+
         ]
 
-        ask extractor extractor_number [
-          ; Get the raw materials from the extractors
-          set raw_material_1_count (raw_material_1_count - 1)
-          set raw_material_2_count (raw_material_2_count - 1)
-          set raw_material_3_count (raw_material_3_count - 1)
-          set raw_material_4_count (raw_material_4_count - 1)
-        ]
-
-      ]
-
-      ; Check if y-coordinate is 3 (upper manufacturer)
-      ; or -13 (lower manufacturer)
-      if (member? patch-here manufacturer-drop-offs)
-      [
-        let manuf_number 0
-        ifelse [pycor] of patch-here = 3
-        [
-          set manuf_number 2
-        ]
-        [
-          set manuf_number 3
-        ]
-
-        ask factory manuf_number [
-           ; Add current inventory to the manufacturer destination
-           set current_inven (current_inven + 1)
-        ]
-
-      ]
+      )
 
       ; Rotate to go back
       rt 180
@@ -728,59 +936,182 @@ to transport ; transporter procedure
     display
   ]
 
+end
+
+; Allows the hospital transporters to move
+to hospital-transport ; hospital transporter procedure
+
   ; Transports the manufactured goods to the hospitals
   ask hosp-transporters[
-    let temp_dest 0
+
     if (patch-here = destination) [
 
-      set temp_dest (destination)
+      ; Switch start patch and destination patch
+      let temp_dest (destination)
       set destination (start_patch)
       set start_patch (temp_dest)
 
-      ; Check if y-coordinate is 3 (upper hospital)
-      ; or -13 (lower hospital)
-      if (member? patch-here hospital-drop-offs)
-      [
-        let hosp_number 0
-        ifelse [pycor] of patch-here = 3
+      ; Place current stock per item
+      ; in a temporary variable
+      let cur_glove_stock   glove_stock
+      let cur_ppe_stock     ppe_stock
+      let cur_mask_stock    mask_stock
+      let cur_syringe_stock  syringe_stock
+
+      (
+
+        ; Check if y-coordinate is 3 (upper hospital)
+        ; or -13 (lower hospital)
+        ifelse (member? patch-here hospital-drop-offs)
         [
-          set hosp_number 4
+
+          let hosp_number 0
+          ifelse [pycor] of patch-here = 3
+          [ set hosp_number 4 ]
+          [ set hosp_number 5 ]
+
+
+          ask hospital hosp_number [
+
+            ; Add stock to the hospital destination
+
+            ; Glove stock of hospital
+            ifelse (glove_stock + cur_glove_stock <= glove_capacity)
+            [
+              set glove_stock ( glove_stock + cur_glove_stock )
+              set cur_glove_stock 0
+            ]
+            [
+              set cur_glove_stock ( cur_glove_stock - ( glove_capacity - glove_stock) )
+              set glove_stock glove_capacity
+            ]
+
+            ; PPE stock of hospital
+            ifelse (ppe_stock + cur_ppe_stock <= ppe_capacity)
+            [
+              set ppe_stock ( ppe_stock + cur_ppe_stock )
+              set cur_ppe_stock 0
+            ]
+            [
+              set cur_ppe_stock ( cur_ppe_stock - ( ppe_capacity - ppe_stock) )
+              set ppe_stock ppe_capacity
+            ]
+
+
+            ; Masks stock of hospital
+            ifelse (mask_stock + cur_mask_stock <= mask_capacity)
+            [
+              set mask_stock ( mask_stock + cur_mask_stock )
+              set cur_mask_stock 0
+            ]
+            [
+              set cur_mask_stock ( cur_mask_stock - ( mask_capacity - mask_stock) )
+              set mask_stock mask_capacity
+            ]
+
+
+            ; Syringe stock of hospital
+            ifelse (syringe_stock + cur_syringe_stock <= syringe_capacity)
+            [
+              set syringe_stock (syringe_stock + cur_syringe_stock )
+              set cur_syringe_stock 0
+            ]
+            [
+              set cur_syringe_stock ( cur_syringe_stock - ( syringe_capacity - syringe_stock) )
+              set syringe_stock syringe_capacity
+            ]
+
+          ]
+
+          ; Set the current stock of the transporters
+          ; based on the stock that was given to the hospitals
+          set glove_stock   cur_glove_stock
+          set ppe_stock     cur_ppe_stock
+          set mask_stock    cur_mask_stock
+          set syringe_stock cur_syringe_stock
+
         ]
+
+        ; Check if y-coordinate is 3 (upper manufacturer)
+        ; or -13 (lower manufacturer)
+        (member? patch-here manufacturer-drop-offs)
         [
-          set hosp_number 5
+          let manuf_number 0
+          ifelse [pycor] of patch-here = 3
+          [ set manuf_number 2 ]
+          [ set manuf_number 3 ]
+
+          ask factory manuf_number [
+
+            ; Deduct from inventory of a manufacturer
+
+            ;;;;;;;;;;;;;;;;
+            ; Gloves stock ;
+            ;;;;;;;;;;;;;;;;
+            ifelse (cur_glove_stock + glove_stock) <= load-capacity
+            [
+             set cur_glove_stock ( cur_glove_stock + glove_stock )
+             set glove_stock 0
+            ]
+            [
+              set cur_glove_stock ( cur_glove_stock + ( load-capacity - cur_glove_stock ) )
+              set glove_stock ( glove_stock - ( load-capacity - cur_glove_stock ) )
+            ]
+
+            ;;;;;;;;;;;;;;;;
+            ;  PPE stock   ;
+            ;;;;;;;;;;;;;;;;
+            ifelse (cur_ppe_stock + ppe_stock) <= load-capacity
+            [
+             set cur_ppe_stock ( cur_ppe_stock + ppe_stock )
+             set ppe_stock 0
+            ]
+            [
+              set cur_ppe_stock ( cur_ppe_stock + ( load-capacity - cur_ppe_stock ) )
+              set ppe_stock ( ppe_stock - ( load-capacity - cur_ppe_stock ) )
+            ]
+
+            ;;;;;;;;;;;;;;;;
+            ; Masks stock  ;
+            ;;;;;;;;;;;;;;;;
+            ifelse (cur_mask_stock + mask_stock) <= load-capacity
+            [
+             set cur_mask_stock ( cur_mask_stock + mask_stock )
+             set mask_stock 0
+            ]
+            [
+              set cur_mask_stock ( cur_mask_stock + ( load-capacity - cur_mask_stock ) )
+              set mask_stock ( mask_stock - ( load-capacity - cur_mask_stock ) )
+            ]
+
+            ;;;;;;;;;;;;;;;;
+            ;;Syringe stock;
+            ;;;;;;;;;;;;;;;;
+            ifelse (cur_syringe_stock + syringe_stock) <= load-capacity
+            [
+             set cur_syringe_stock ( cur_syringe_stock + syringe_stock )
+             set syringe_stock 0
+            ]
+            [
+              set cur_syringe_stock ( cur_syringe_stock + ( load-capacity - cur_syringe_stock ) )
+              set syringe_stock ( syringe_stock - ( load-capacity - cur_syringe_stock ) )
+            ]
+
+          ]
+
+          ; The "cur" variables are now the
+          ; actual current stock per item
+          set glove_stock    (cur_glove_stock)
+          set ppe_stock      (cur_ppe_stock)
+          set mask_stock     (cur_mask_stock)
+          set syringe_stock  (cur_syringe_stock)
+
         ]
 
-        ask hospital hosp_number [
-          ; Add stock to the hospital destination
-          set glove_stock (glove_stock + 1)
-          set ppe_stock (ppe_stock + 1)
-          set mask_stock (mask_stock + 1)
-          set syringe_stock (syringe_stock + 1)
-        ]
-
-      ]
-
-      ; Check if y-coordinate is 3 (upper manufacturer)
-      ; or -13 (lower manufacturer)
-      if (member? patch-here manufacturer-drop-offs)
-      [
-        let manuf_number 0
-        ifelse [pycor] of patch-here = 3
-        [
-          set manuf_number 2
-        ]
-        [
-          set manuf_number 3
-        ]
-
-        ask factory manuf_number [
-           ; Add current inventory to the manufacturer destination
-           set current_inven (current_inven - 1)
-        ]
-
-      ]
+      )
 
 
+      ; Rotate to go back
       rt 180
 
     ]
@@ -788,6 +1119,7 @@ to transport ; transporter procedure
     rotate-hosp-transporters
     forward 1
     display
+
   ]
 
 end
@@ -797,17 +1129,105 @@ to extract ; extractor procedure
 
   ask extractors
   [
+    ; Extract each raw material individually
+    let extracted_1 random extraction-rate-prob
+    let extracted_2 random extraction-rate-prob
+    let extracted_3 random extraction-rate-prob
+    let extracted_4 random extraction-rate-prob
+
+    ; Add the extracted to the current count per raw material
+    set raw_material_1_count (raw_material_1_count + extracted_1)
+    set raw_material_2_count (raw_material_2_count + extracted_2)
+    set raw_material_3_count (raw_material_3_count + extracted_3)
+    set raw_material_4_count (raw_material_4_count + extracted_4)
+
+    ; If the current count is greater than capacity, limit to capacity
+    if raw_material_1_count > extractor-capacity [set raw_material_1_count extractor-capacity]
+    if raw_material_2_count > extractor-capacity [set raw_material_2_count extractor-capacity]
+    if raw_material_3_count > extractor-capacity [set raw_material_3_count extractor-capacity]
+    if raw_material_4_count > extractor-capacity [set raw_material_4_count extractor-capacity]
+
+    ; Turn around if the current location is at the edge
     if patch-ahead 1 = nobody or [pcolor] of patch-ahead 1 != grey + 2
     [
       rt 180
     ]
 
+    ; Move every 10 seconds
     if ticks mod 10 = 0
     [
       rt random 40
       lt random 40
       fd 0.5
     ]
+
+  ]
+
+end
+
+; Allows the manufacturers to create products
+; depending on the available raw materials
+to manufacture ; manufacturer procedure
+
+  ; Not yet using manufacturing rate
+  ; Also used random counts for creating a product
+
+  ask manufacturers
+  [
+
+    if ; Create a pair of gloves
+    raw_material_1_count >= 5 and
+    raw_material_2_count >= 1 and
+    raw_material_3_count >= 2 and
+    raw_material_4_count >= 4
+    [
+      set glove_stock (glove_stock + 1)
+      set raw_material_1_count ( raw_material_1_count - 5 )
+      set raw_material_2_count ( raw_material_2_count - 1 )
+      set raw_material_3_count ( raw_material_3_count - 2 )
+      set raw_material_4_count ( raw_material_4_count - 4 )
+    ]
+
+    if ; Create a PPE
+    raw_material_1_count >= 5 and
+    raw_material_2_count >= 5 and
+    raw_material_3_count >= 5 and
+    raw_material_4_count >= 2
+    [
+      set ppe_stock (ppe_stock + 1)
+      set raw_material_1_count ( raw_material_1_count - 5 )
+      set raw_material_2_count ( raw_material_2_count - 5 )
+      set raw_material_3_count ( raw_material_3_count - 5 )
+      set raw_material_4_count ( raw_material_4_count - 2 )
+    ]
+
+    if ; Create a mask
+    raw_material_1_count >= 2 and
+    raw_material_2_count >= 2 and
+    raw_material_3_count >= 5 and
+    raw_material_4_count >= 2
+    [
+      set mask_stock (ppe_stock + 1)
+      set raw_material_1_count ( raw_material_1_count - 2 )
+      set raw_material_2_count ( raw_material_2_count - 2 )
+      set raw_material_3_count ( raw_material_3_count - 5 )
+      set raw_material_4_count ( raw_material_4_count - 2 )
+    ]
+
+
+    if ; Create a syringe
+    raw_material_1_count >= 1 and
+    raw_material_2_count >= 5 and
+    raw_material_3_count >= 5 and
+    raw_material_4_count >= 1
+    [
+      set syringe_stock (syringe_stock + 1)
+      set raw_material_1_count ( raw_material_1_count - 1 )
+      set raw_material_2_count ( raw_material_2_count - 5 )
+      set raw_material_3_count ( raw_material_3_count - 5 )
+      set raw_material_4_count ( raw_material_4_count - 1 )
+    ]
+
   ]
 
 end
@@ -819,12 +1239,26 @@ end
 
 ; Function at each time step (tick)
 to go
-  transport
+
+  ; Extractor procedure
   extract
+
+  ; Extractor Transporter procedures
+  extractor-transport
+
+  ; Manufacturer procedures
+  manufacture
+
+  ; Hospital Transporter procedures
+  hospital-transport
+
+  ; Patient procedures
   patient-move
   spawn-patient
   discharge-patients
+
   tick
+
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -855,10 +1289,10 @@ ticks
 30.0
 
 BUTTON
-371
-445
-435
-478
+363
+442
+427
+475
 Setup
 setup
 NIL
@@ -871,43 +1305,26 @@ NIL
 NIL
 1
 
-BUTTON
-454
-445
-517
-478
-Go
-go
-T
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 SLIDER
-13
-32
-217
-65
-transporter_multiplier
-transporter_multiplier
+10
+77
+230
+110
+transporter-multiplier
+transporter-multiplier
 1
 10
-7.0
+1.0
 1
 1
 NIL
 HORIZONTAL
 
 TEXTBOX
-117
-15
-218
-33
+130
+60
+231
+78
 will be multiplied to 2
 11
 0.0
@@ -915,94 +1332,94 @@ will be multiplied to 2
 
 SLIDER
 10
-102
-231
-135
+142
+230
+175
 extractor-capacity
 extractor-capacity
 10
 100
-34.0
+100.0
 1
 1
-items
+per item
 HORIZONTAL
 
 SLIDER
-813
-525
-1023
-558
-extraction-rate
-extraction-rate
 10
-100
-50.0
+181
+230
+214
+extraction-rate-prob
+extraction-rate-prob
+2
+10
+6.0
 1
 1
-items per tick
+per item
 HORIZONTAL
 
 TEXTBOX
 15
-81
+126
 165
-99
+144
 Extractor variables
 11
 0.0
 1
 
 SLIDER
-279
-109
-499
-142
+264
+25
+484
+58
 manufacturer-capacity
 manufacturer-capacity
 10
 100
-76.0
+100.0
 1
 1
 items
 HORIZONTAL
 
 SLIDER
-812
-565
-1025
-598
+264
+76
+484
+109
 manufacture-rate
 manufacture-rate
-10
+1
 100
-50.0
+1.0
 1
 1
 items per tick
 HORIZONTAL
 
 TEXTBOX
-288
-90
-438
-108
+265
+10
+415
+28
 Manufacturer variables
 11
 0.0
 1
 
 SLIDER
-11
-162
-233
-195
+10
+241
+230
+274
 patient-capacity
 patient-capacity
 10
 100
-100.0
+20.0
 1
 1
 patients
@@ -1039,10 +1456,10 @@ patients per tick
 HORIZONTAL
 
 SLIDER
-10
-297
-233
-330
+8
+369
+231
+402
 ppe-capacity
 ppe-capacity
 0
@@ -1054,10 +1471,10 @@ PPEs
 HORIZONTAL
 
 SLIDER
-8
-206
+10
+285
 230
-239
+318
 mask-capacity
 mask-capacity
 0
@@ -1069,25 +1486,25 @@ masks
 HORIZONTAL
 
 SLIDER
-9
-344
-233
-377
+8
+411
+232
+444
 glove-capacity
 glove-capacity
 0
 100
-31.0
+33.0
 1
 1
 gloves
 HORIZONTAL
 
 SLIDER
-7
-250
+9
+327
 230
-283
+360
 syringe-capacity
 syringe-capacity
 0
@@ -1099,65 +1516,65 @@ syringes
 HORIZONTAL
 
 TEXTBOX
-16
-144
-166
-162
+15
+223
+165
+241
 Hospital variables
 11
 0.0
 1
 
 TEXTBOX
-285
-156
-435
-174
+10
+10
+160
+28
 Transporter variables
 11
 0.0
 1
 
 SLIDER
-281
-172
-501
-205
+10
+26
+230
+59
 load-capacity
 load-capacity
-0
+1
 100
-35.0
+50.0
 1
 1
-items
+per item
 HORIZONTAL
 
 TEXTBOX
-808
-503
-958
-521
+901
+560
+1051
+578
 Just for later (if ever)
 11
 15.0
 1
 
 TEXTBOX
-286
-214
-436
-232
+265
+126
+415
+144
 Patient variables
 11
 0.0
 1
 
 SLIDER
-281
-231
-507
-264
+263
+141
+484
+174
 initial-health
 initial-health
 0
@@ -1167,6 +1584,23 @@ initial-health
 1
 NIL
 HORIZONTAL
+
+BUTTON
+447
+443
+510
+476
+Go
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1295,6 +1729,11 @@ Polygon -7500403 true true 105 90 120 195 90 285 105 300 135 300 150 225 165 300
 Rectangle -7500403 true true 127 79 172 94
 Polygon -7500403 true true 195 90 240 150 225 180 165 105
 Polygon -7500403 true true 105 90 60 150 75 180 135 105
+
+square
+false
+0
+Rectangle -7500403 true true 30 30 270 270
 
 tree
 false
