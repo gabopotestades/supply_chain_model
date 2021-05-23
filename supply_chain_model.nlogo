@@ -356,11 +356,23 @@ to patient-move foreach sort patients [p ->
           ; if there is a slot in the current hospital, admit self
           ifelse ((patient_count + 1) <= patient-capacity)
           [
-            set patient_count (patient_count + 1)
-            ask p
+
+            if(glove_stock > 0 and ppe_stock > 0 and mask_stock > 0 and syringe_stock > 0)
             [
-              set color green
+              set patient_count (patient_count + 1)
+              ask p
+              [
+                set color green
+                ask hospital hosp_number
+                [
+                  set glove_stock glove_stock - 1
+                  set ppe_stock ppe_stock - 1
+                  set mask_stock mask_stock - 1
+                  set syringe_stock syringe_stock - 1
+                ]
             ]
+          ]
+
           ]
           [
             ; else reroute the patient to another hospital
@@ -395,6 +407,9 @@ to patient-move foreach sort patients [p ->
                   set color red
                   set shape "square"
                   rt 180
+                  ; add the chance that the patient will die in transport
+                  set health (health - 1)
+                  death
                   forward 1
 
                 ]
@@ -499,7 +514,7 @@ to discharge-patients foreach sort patients [p ->
         ask p
         [
           set health health + 1
-          if (health >= 90)
+          if (health >= 90 and color = green)
           [
             ask hospital hosp_number
             [
@@ -1235,6 +1250,8 @@ end
 ; function to kill a patient if health reaches 0
 to death
   if health < 0 [die]
+
+  ; here add a monitor based on the number of people that died
 end
 
 ; Function at each time step (tick)
@@ -1434,7 +1451,7 @@ admission-rate
 admission-rate
 10
 100
-50.0
+25.0
 1
 1
 patients per tick
@@ -1449,7 +1466,7 @@ release-rate
 release-rate
 0
 100
-50.0
+28.0
 1
 1
 patients per tick
@@ -1464,7 +1481,7 @@ ppe-capacity
 ppe-capacity
 0
 100
-33.0
+10.0
 1
 1
 PPEs
@@ -1479,7 +1496,7 @@ mask-capacity
 mask-capacity
 0
 100
-49.0
+10.0
 1
 1
 masks
@@ -1494,7 +1511,7 @@ glove-capacity
 glove-capacity
 0
 100
-33.0
+10.0
 1
 1
 gloves
@@ -1509,7 +1526,7 @@ syringe-capacity
 syringe-capacity
 0
 100
-35.0
+11.0
 1
 1
 syringes
@@ -1760,7 +1777,7 @@ Circle -7500403 false true 174 234 42
 Circle -7500403 false true 174 114 42
 Circle -7500403 false true 174 24 42
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.1.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
