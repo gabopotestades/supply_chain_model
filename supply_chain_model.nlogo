@@ -13,9 +13,9 @@ globals[
 breed [extractors extractor]
 breed [manufacturers factory]
 breed [hospitals hospital]
-breed [patients patient]
 breed [extr-transporters ex-truck]
 breed [hosp-transporters hs-truck]
+breed [patients patient]
 
 ; Initialize internal values per breed
 extr-transporters-own[
@@ -605,7 +605,7 @@ end
 
 ; Randomize choice
 to-report coin-flip?
-  report random 2 = 0
+  report random 100 = 0
 end
 
 ; Allows the extractor transporters to change lanes
@@ -970,6 +970,7 @@ to hospital-transport ; hospital transporter procedure
       let cur_ppe_stock     ppe_stock
       let cur_mask_stock    mask_stock
       let cur_syringe_stock  syringe_stock
+      let remaining_stocks 0
 
       (
 
@@ -987,53 +988,68 @@ to hospital-transport ; hospital transporter procedure
           ask hospital hosp_number [
 
             ; Add stock to the hospital destination
+            let stocks_to_be_transferred 0
 
             ; Glove stock of hospital
-            ifelse (glove_stock + cur_glove_stock <= glove_capacity)
+            if (glove_stock + cur_glove_stock <= glove_capacity)
             [
-              set glove_stock ( glove_stock + cur_glove_stock )
-              set cur_glove_stock 0
-            ]
-            [
-              set cur_glove_stock ( cur_glove_stock - ( glove_capacity - glove_stock) )
-              set glove_stock glove_capacity
+              set stocks_to_be_transferred (glove_capacity - glove_stock)
+              ifelse cur_glove_stock > stocks_to_be_transferred
+              [
+                set glove_stock (glove_stock + stocks_to_be_transferred)
+                set cur_glove_stock (cur_glove_stock - stocks_to_be_transferred)
+              ]
+              [
+                set glove_stock (glove_stock + cur_glove_stock)
+                set cur_glove_stock 0
+              ]
             ]
 
             ; PPE stock of hospital
-            ifelse (ppe_stock + cur_ppe_stock <= ppe_capacity)
+            if (ppe_stock + cur_ppe_stock <= ppe_capacity)
             [
-              set ppe_stock ( ppe_stock + cur_ppe_stock )
-              set cur_ppe_stock 0
-            ]
-            [
-              set cur_ppe_stock ( cur_ppe_stock - ( ppe_capacity - ppe_stock) )
-              set ppe_stock ppe_capacity
+              set stocks_to_be_transferred (ppe_capacity - ppe_stock)
+              ifelse cur_ppe_stock > stocks_to_be_transferred
+              [
+                set ppe_stock (ppe_stock + stocks_to_be_transferred)
+                set cur_ppe_stock (cur_ppe_stock - stocks_to_be_transferred)
+              ]
+              [
+                set ppe_stock (glove_stock + cur_ppe_stock)
+                set cur_ppe_stock 0
+              ]
             ]
 
 
             ; Masks stock of hospital
-            ifelse (mask_stock + cur_mask_stock <= mask_capacity)
+            if (mask_stock + cur_mask_stock <= mask_capacity)
             [
-              set mask_stock ( mask_stock + cur_mask_stock )
-              set cur_mask_stock 0
+              set stocks_to_be_transferred (mask_capacity - mask_stock)
+              ifelse cur_mask_stock > stocks_to_be_transferred
+              [
+                set mask_stock (mask_stock + stocks_to_be_transferred)
+                set cur_mask_stock (cur_mask_stock - stocks_to_be_transferred)
+              ]
+              [
+                set mask_stock (mask_stock + cur_mask_stock)
+                set cur_mask_stock 0
+              ]
             ]
-            [
-              set cur_mask_stock ( cur_mask_stock - ( mask_capacity - mask_stock) )
-              set mask_stock mask_capacity
-            ]
-
 
             ; Syringe stock of hospital
-            ifelse (syringe_stock + cur_syringe_stock <= syringe_capacity)
+            if (syringe_stock + cur_syringe_stock <= syringe_capacity)
             [
-              set syringe_stock (syringe_stock + cur_syringe_stock )
-              set cur_syringe_stock 0
+              set stocks_to_be_transferred (syringe_capacity - syringe_stock)
+              ifelse cur_syringe_stock > stocks_to_be_transferred
+              [
+                set syringe_stock (syringe_stock + stocks_to_be_transferred)
+                set cur_syringe_stock (cur_syringe_stock - stocks_to_be_transferred)
+              ]
+              [
+                set syringe_stock (mask_stock + cur_syringe_stock)
+                set cur_syringe_stock 0
+              ]
             ]
-            [
-              set cur_syringe_stock ( cur_syringe_stock - ( syringe_capacity - syringe_stock) )
-              set syringe_stock syringe_capacity
-            ]
-
           ]
 
           ; Set the current stock of the transporters
@@ -1042,7 +1058,13 @@ to hospital-transport ; hospital transporter procedure
           set ppe_stock     cur_ppe_stock
           set mask_stock    cur_mask_stock
           set syringe_stock cur_syringe_stock
+          set remaining_stocks (cur_glove_stock + cur_ppe_stock + cur_mask_stock + cur_syringe_stock)
 
+          if remaining_stocks > 0 [
+            ifelse [pycor] of patch-here = 3
+            [ set destination patch 1 -3 ]
+            [ set destination patch 1 3 ]
+          ]
         ]
 
         ; Check if y-coordinate is 3 (upper manufacturer)
@@ -1307,10 +1329,10 @@ ticks
 30.0
 
 BUTTON
-364
-441
-428
-474
+536
+511
+600
+544
 Setup
 setup
 NIL
@@ -1604,13 +1626,13 @@ NIL
 HORIZONTAL
 
 BUTTON
-447
-443
-510
-476
+612
+511
+675
+544
 Go
 go
-T
+NIL
 1
 T
 OBSERVER
@@ -1619,6 +1641,94 @@ NIL
 NIL
 NIL
 1
+
+MONITOR
+1363
+20
+1506
+65
+ppe stocks of hosp 4
+[ ppe_stock ] of hospital 4
+17
+1
+11
+
+MONITOR
+1363
+75
+1494
+120
+glove stock of hosp 4
+[glove_stock] of hospital 4
+17
+1
+11
+
+MONITOR
+1363
+129
+1491
+174
+mask stock of hosp 4
+[mask_stock] of hospital 4
+17
+1
+11
+
+MONITOR
+1362
+185
+1519
+230
+syringe stock of hosp 4
+[syringe_stock] of hospital 4
+17
+1
+11
+
+MONITOR
+1553
+20
+1684
+65
+glove stock of hosp 5
+[glove_stock] of hospital 5
+17
+1
+11
+
+MONITOR
+1553
+75
+1674
+120
+ppe stock of hosp 5
+[ppe_stock] of hospital 5
+17
+1
+11
+
+MONITOR
+1553
+130
+1681
+175
+mask stock of hosp 5
+[mask_stock] of hospital 5
+17
+1
+11
+
+MONITOR
+1555
+184
+1696
+229
+syringe stock of hosp 5
+[syringe_stock] of hospital 5
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1778,7 +1888,7 @@ Circle -7500403 false true 174 234 42
 Circle -7500403 false true 174 114 42
 Circle -7500403 false true 174 24 42
 @#$#@#$#@
-NetLogo 6.1.1
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
