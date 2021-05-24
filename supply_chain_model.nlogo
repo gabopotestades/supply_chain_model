@@ -26,6 +26,7 @@ extr-transporters-own[
   raw_material_4_count
   start_patch
   destination
+  destination_type
 ]
 hosp-transporters-own[
   delivery_speed
@@ -35,6 +36,7 @@ hosp-transporters-own[
   syringe_stock
   start_patch
   destination
+  destination_type
 ]
 extractors-own[
   extractor_capacity
@@ -183,6 +185,10 @@ to setup-agents
     set size 12
     set color brown
     set warehouse_capacity manufacturer-capacity
+    set glove_stock manufacturer-capacity
+    set ppe_stock manufacturer-capacity
+    set mask_stock manufacturer-capacity
+    set syringe_stock manufacturer-capacity
   ]
   create-hospitals 2 [
     set size 12
@@ -192,9 +198,13 @@ to setup-agents
     set ppe_capacity ppe-capacity
     set mask_capacity mask-capacity
     set syringe_capacity syringe-capacity
+    set glove_stock glove-capacity
+    set ppe_stock ppe-capacity
+    set mask_stock mask-capacity
+    set syringe_stock syringe-capacity
   ]
 
-   create-patients 100 [
+   create-patients 10 [
     set size 1
     set color orange
     set health initial-health
@@ -203,11 +213,17 @@ to setup-agents
   create-extr-transporters (transporter-multiplier * 2)[
     set size  2
     set color red
+    set destination_type "delivery"
   ]
 
   create-hosp-transporters (transporter-multiplier * 2)[
     set size  2
     set color blue
+    set destination_type "delivery"
+    set glove_stock load-capacity
+    set ppe_stock load-capacity
+    set mask_stock load-capacity
+    set syringe_stock load-capacity
   ]
 
 end
@@ -293,10 +309,10 @@ to setup-positions
       ; Set random heading
       ifelse coin-flip?
       [
-        set destination patch 21 3
+        set destination patch 20 3
       ]
       [
-        set destination patch 21 -13
+        set destination patch 20 -13
       ]
 
       set heading 90
@@ -363,7 +379,7 @@ to patient-move foreach sort patients [p ->
           ; if there is a slot in the current hospital, admit self
           ifelse ((patient_count + 1) <= patient-capacity)
           [
-            print "admitting patient"
+            ; print "admitting patient"
             set patient_count patient_count + 1
             ask p [
               set color green
@@ -394,7 +410,7 @@ to patient-move foreach sort patients [p ->
                 ]
                 ; Set different visuals to discern
                 ; if the patient is rerouting
-                  print "moving to another hospital"
+                  ; print "moving to another hospital"
                   ask hospital hosp_number
                     [
                       ;print "patient died from waiting"
@@ -428,7 +444,7 @@ to patient-move foreach sort patients [p ->
                 set color green
                 ifelse (health >= 90)
                 [
-                  print "now healthy, discharging patient alive"
+                  ; print "now healthy, discharging patient alive"
                   die
                   ; discharge alive
                   ask hospital hosp_number
@@ -446,7 +462,7 @@ to patient-move foreach sort patients [p ->
                     set syringe_stock syringe_stock - 1
                   ]
                   ; and heal the patient
-                  print "HEALING THE PATIENT"
+                  ; print "HEALING THE PATIENT"
                   set health health + 1
                 ]
               ]
@@ -540,7 +556,6 @@ to rotate-moving-patient ; patient procedure
 
 end
 
-
 ; Creates a patient in near the hospitals
 to spawn-patient
 
@@ -605,7 +620,7 @@ end
 
 ; Randomize choice
 to-report coin-flip?
-  report random 100 = 0
+  report random 1 = 0
 end
 
 ; Allows the extractor transporters to change lanes
@@ -712,7 +727,7 @@ to rotate-hosp-transporters ;  hosp-transporter procedure
 
       (
       ifelse
-      ; If the the transporter is a horizontal road
+      ; If the transporter is in a vertical road turning at a horizontal road
       ( y_dest != y_cur and y_start != y_dest)
       [
         (
@@ -725,17 +740,17 @@ to rotate-hosp-transporters ;  hosp-transporter procedure
           [
             rt 90
           ]
-          x_dest = 21 and y_cur = 3 ; Going to an extractor on the lower lane
+          x_dest = 20 and y_cur = 3 ; Going to an extractor on the lower lane
           [
             rt 90
           ]
-          x_dest = 21 and y_cur = -13 ; Going to an extractor on the lower lane
+          x_dest = 20 and y_cur = -13 ; Going to an extractor on the lower lane
           [
             rt -90
           ]
         )
       ]
-      ; If the transporter is in a vertical road
+      ; If the transporter is in a horizontal road turning at a vertical road
       (y_dest = y_cur and y_start != y_dest)
       [
         (
@@ -748,18 +763,50 @@ to rotate-hosp-transporters ;  hosp-transporter procedure
           [
             rt 90
           ]
-          x_dest = 21 and y_cur = 3 ; Going to an extractor on the lower lane
+          x_dest = 20 and y_cur = 3 ; Going to an extractor on the lower lane
           [
             rt 90
           ]
-          x_dest = 21 and y_cur = -13 ; Going to an extractor on the lower lane
+          x_dest = 20 and y_cur = -13 ; Going to an extractor on the lower lane
           [
             rt -90
           ]
         )
       ]
+
       )
 
+    ]
+
+end
+
+; Allows the hospital that are rotating to change lanes
+to rotate-rerouting-hosp-transporters
+
+  let x_start [pxcor] of start_patch
+  let y_start [pycor] of start_patch
+  let x_dest  [pxcor] of destination
+  let y_dest  [pycor] of destination
+  let x_cur   [pxcor] of patch-here
+  let y_cur   [pycor] of patch-here
+
+     ; Check if the current patch is an intersection
+    if
+    ( member? patch-here intersections )
+    [
+     (
+
+      ifelse
+      (y_start = -13 and y_dest = 3) ; Going from bottom hospital to top
+       [
+         rt 90
+       ]
+      (y_start = 3 and y_dest = -13); Going from top hospital to bottom
+       [
+         lt 90
+       ]
+
+     )
     ]
 
 end
@@ -959,11 +1006,6 @@ to hospital-transport ; hospital transporter procedure
 
     if (patch-here = destination) [
 
-      ; Switch start patch and destination patch
-      let temp_dest (destination)
-      set destination (start_patch)
-      set start_patch (temp_dest)
-
       ; Place current stock per item
       ; in a temporary variable
       let cur_glove_stock   glove_stock
@@ -991,65 +1033,51 @@ to hospital-transport ; hospital transporter procedure
             let stocks_to_be_transferred 0
 
             ; Glove stock of hospital
-            if (glove_stock + cur_glove_stock <= glove_capacity)
+            ifelse (glove_stock + cur_glove_stock <= glove_capacity)
             [
-              set stocks_to_be_transferred (glove_capacity - glove_stock)
-              ifelse cur_glove_stock > stocks_to_be_transferred
-              [
-                set glove_stock (glove_stock + stocks_to_be_transferred)
-                set cur_glove_stock (cur_glove_stock - stocks_to_be_transferred)
-              ]
-              [
-                set glove_stock (glove_stock + cur_glove_stock)
-                set cur_glove_stock 0
-              ]
+              set glove_stock ( glove_stock + cur_glove_stock )
+              set cur_glove_stock 0
+            ]
+            [
+              set cur_glove_stock ( cur_glove_stock - ( glove_capacity - glove_stock) )
+              set glove_stock glove_capacity
             ]
 
             ; PPE stock of hospital
-            if (ppe_stock + cur_ppe_stock <= ppe_capacity)
+            ifelse (ppe_stock + cur_ppe_stock <= ppe_capacity)
             [
-              set stocks_to_be_transferred (ppe_capacity - ppe_stock)
-              ifelse cur_ppe_stock > stocks_to_be_transferred
-              [
-                set ppe_stock (ppe_stock + stocks_to_be_transferred)
-                set cur_ppe_stock (cur_ppe_stock - stocks_to_be_transferred)
-              ]
-              [
-                set ppe_stock (glove_stock + cur_ppe_stock)
-                set cur_ppe_stock 0
-              ]
+              set ppe_stock ( ppe_stock + cur_ppe_stock )
+              set cur_ppe_stock 0
+            ]
+            [
+              set cur_ppe_stock ( cur_ppe_stock - ( ppe_capacity - ppe_stock) )
+              set ppe_stock ppe_capacity
             ]
 
 
             ; Masks stock of hospital
-            if (mask_stock + cur_mask_stock <= mask_capacity)
+            ifelse (mask_stock + cur_mask_stock <= mask_capacity)
             [
-              set stocks_to_be_transferred (mask_capacity - mask_stock)
-              ifelse cur_mask_stock > stocks_to_be_transferred
-              [
-                set mask_stock (mask_stock + stocks_to_be_transferred)
-                set cur_mask_stock (cur_mask_stock - stocks_to_be_transferred)
-              ]
-              [
-                set mask_stock (mask_stock + cur_mask_stock)
-                set cur_mask_stock 0
-              ]
+              set mask_stock ( mask_stock + cur_mask_stock )
+              set cur_mask_stock 0
+            ]
+            [
+              set cur_mask_stock ( cur_mask_stock - ( mask_capacity - mask_stock) )
+              set mask_stock mask_capacity
             ]
 
             ; Syringe stock of hospital
-            if (syringe_stock + cur_syringe_stock <= syringe_capacity)
+            ifelse (syringe_stock + cur_syringe_stock <= syringe_capacity)
             [
-              set stocks_to_be_transferred (syringe_capacity - syringe_stock)
-              ifelse cur_syringe_stock > stocks_to_be_transferred
-              [
-                set syringe_stock (syringe_stock + stocks_to_be_transferred)
-                set cur_syringe_stock (cur_syringe_stock - stocks_to_be_transferred)
-              ]
-              [
-                set syringe_stock (mask_stock + cur_syringe_stock)
-                set cur_syringe_stock 0
-              ]
+              set syringe_stock (syringe_stock + cur_syringe_stock )
+              set cur_syringe_stock 0
             ]
+            [
+              set cur_syringe_stock ( cur_syringe_stock - ( syringe_capacity - syringe_stock) )
+              set syringe_stock syringe_capacity
+            ]
+
+
           ]
 
           ; Set the current stock of the transporters
@@ -1060,10 +1088,35 @@ to hospital-transport ; hospital transporter procedure
           set syringe_stock cur_syringe_stock
           set remaining_stocks (cur_glove_stock + cur_ppe_stock + cur_mask_stock + cur_syringe_stock)
 
-          if remaining_stocks > 0 [
+
+          ; Switch start patch and destination patch
+          set start_patch (patch-here)
+
+          ; If there are remaining cargo, reroute
+          ifelse remaining_stocks > 0 [
+            set destination_type "reroute"
             ifelse [pycor] of patch-here = 3
-            [ set destination patch 1 -3 ]
-            [ set destination patch 1 3 ]
+            [ set destination patch 20 -13 ]
+            [ set destination patch 20  3  ]
+          ]
+          [
+            set destination_type "delivery"
+
+            let factory2_stocks 0
+            let factory3_stocks 0
+
+            ask factory 2
+            [ set factory2_stocks (glove_stock + ppe_stock + mask_stock + syringe_stock) ]
+
+            ask factory 3
+            [ set factory3_stocks (glove_stock + ppe_stock + mask_stock + syringe_stock) ]
+
+
+            ; Check which factory has more stocks
+            ifelse factory2_stocks > factory3_stocks
+            [ set destination patch 1   3 ]
+            [ set destination patch 1 -13 ]
+
           ]
         ]
 
@@ -1076,7 +1129,8 @@ to hospital-transport ; hospital transporter procedure
           [ set manuf_number 2 ]
           [ set manuf_number 3 ]
 
-          ask factory manuf_number [
+          ask factory manuf_number
+          [
 
             ; Deduct from inventory of a manufacturer
 
@@ -1141,6 +1195,11 @@ to hospital-transport ; hospital transporter procedure
           set mask_stock     (cur_mask_stock)
           set syringe_stock  (cur_syringe_stock)
 
+          ; Switch start patch and destination patch
+          let temp_dest (destination)
+          set destination (start_patch)
+          set start_patch (temp_dest)
+
         ]
 
       )
@@ -1151,7 +1210,14 @@ to hospital-transport ; hospital transporter procedure
 
     ]
 
-    rotate-hosp-transporters
+    ifelse destination_type = "delivery"
+    [
+     rotate-hosp-transporters
+    ]
+    [
+     rotate-rerouting-hosp-transporters
+    ]
+
     forward 1
     display
 
@@ -1295,7 +1361,7 @@ to go
 
   ; Patient procedures
   patient-move
-  spawn-patient
+  ; spawn-patient
 
   tick
 
@@ -1329,10 +1395,10 @@ ticks
 30.0
 
 BUTTON
-536
-511
-600
-544
+537
+496
+601
+529
 Setup
 setup
 NIL
@@ -1504,7 +1570,7 @@ ppe-capacity
 ppe-capacity
 0
 100
-10.0
+25.0
 1
 1
 PPEs
@@ -1519,7 +1585,7 @@ mask-capacity
 mask-capacity
 0
 100
-10.0
+25.0
 1
 1
 masks
@@ -1534,7 +1600,7 @@ glove-capacity
 glove-capacity
 0
 100
-10.0
+25.0
 1
 1
 gloves
@@ -1549,7 +1615,7 @@ syringe-capacity
 syringe-capacity
 0
 100
-11.0
+25.0
 1
 1
 syringes
@@ -1626,13 +1692,13 @@ NIL
 HORIZONTAL
 
 BUTTON
-612
-511
-675
-544
+613
+496
+676
+529
 Go
 go
-NIL
+T
 1
 T
 OBSERVER
