@@ -1189,12 +1189,12 @@ to hospital-transport ; hospital transporter procedure
             ;;;;;;;;;;;;;;;;
             ifelse (cur_glove_stock + glove_stock) <= load-capacity
             [
-             set cur_glove_stock ( cur_glove_stock + glove_stock )
-             set glove_stock 0
+              set cur_glove_stock ( cur_glove_stock + glove_stock )
+              set glove_stock 0
             ]
             [
-              set cur_glove_stock ( cur_glove_stock + ( load-capacity - cur_glove_stock ) )
-              set glove_stock ( glove_stock - ( load-capacity - cur_glove_stock ) )
+              set glove_stock (glove_stock - (load-capacity - cur_glove_stock))
+              set cur_glove_stock load-capacity
             ]
 
             ;;;;;;;;;;;;;;;;
@@ -1206,8 +1206,8 @@ to hospital-transport ; hospital transporter procedure
              set ppe_stock 0
             ]
             [
-              set cur_ppe_stock ( cur_ppe_stock + ( load-capacity - cur_ppe_stock ) )
-              set ppe_stock ( ppe_stock - ( load-capacity - cur_ppe_stock ) )
+              set ppe_stock (ppe_stock - (load-capacity - cur_ppe_stock))
+              set cur_ppe_stock load-capacity
             ]
 
             ;;;;;;;;;;;;;;;;
@@ -1215,12 +1215,12 @@ to hospital-transport ; hospital transporter procedure
             ;;;;;;;;;;;;;;;;
             ifelse (cur_mask_stock + mask_stock) <= load-capacity
             [
-             set cur_mask_stock ( cur_mask_stock + mask_stock )
-             set mask_stock 0
+              set cur_mask_stock ( cur_mask_stock + mask_stock )
+              set mask_stock 0
             ]
             [
-              set cur_mask_stock ( cur_mask_stock + ( load-capacity - cur_mask_stock ) )
-              set mask_stock ( mask_stock - ( load-capacity - cur_mask_stock ) )
+              set mask_stock (mask_stock - (load-capacity - cur_mask_stock))
+              set cur_mask_stock load-capacity
             ]
 
             ;;;;;;;;;;;;;;;;
@@ -1228,12 +1228,12 @@ to hospital-transport ; hospital transporter procedure
             ;;;;;;;;;;;;;;;;
             ifelse (cur_syringe_stock + syringe_stock) <= load-capacity
             [
-             set cur_syringe_stock ( cur_syringe_stock + syringe_stock )
-             set syringe_stock 0
+              set cur_syringe_stock ( cur_syringe_stock + syringe_stock )
+              set syringe_stock 0
             ]
             [
-              set cur_syringe_stock ( cur_syringe_stock + ( load-capacity - cur_syringe_stock ) )
-              set syringe_stock ( syringe_stock - ( load-capacity - cur_syringe_stock ) )
+              set syringe_stock (syringe_stock - (load-capacity - cur_syringe_stock))
+              set cur_syringe_stock load-capacity
             ]
 
           ]
@@ -1709,7 +1709,7 @@ BUTTON
 529
 Go
 go
-T
+NIL
 1
 T
 OBSERVER
