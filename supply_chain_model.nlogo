@@ -181,6 +181,10 @@ to setup-agents
     set color yellow
     set heading 0
     set extractor_capacity extractor-capacity
+    set raw_material_1_count 0
+    set raw_material_2_count 0
+    set raw_material_3_count 0
+    set raw_material_4_count 0
   ]
   create-manufacturers 2[
     set size 12
@@ -218,10 +222,10 @@ to setup-agents
     set size  2
     set color red
     set destination_type "delivery"
-    set raw_material_1_count extractor-capacity
-    set raw_material_2_count extractor-capacity
-    set raw_material_3_count extractor-capacity
-    set raw_material_4_count extractor-capacity
+    set raw_material_1_count 0
+    set raw_material_2_count 0
+    set raw_material_3_count 0
+    set raw_material_4_count 0
   ]
 
   create-hosp-transporters (transporter-multiplier * 2)[
@@ -938,8 +942,8 @@ to extractor-transport ; extractor transporter procedure
               set raw_mat1_to_give 0
             ]
             [
-              set raw_material_1_count manufacturer-raw-capacity ; considered as full
               set raw_mat1_to_give ( raw_mat1_to_give - ( manufacturer-raw-capacity - cur_raw_mat1 ) )
+              set raw_material_1_count manufacturer-raw-capacity ; considered as full
             ]
 
             ;;;;;;;;;;;;;;;;;;;;
@@ -951,8 +955,8 @@ to extractor-transport ; extractor transporter procedure
               set raw_mat2_to_give 0
             ]
             [
-              set raw_material_2_count manufacturer-raw-capacity ; considered as full
               set raw_mat2_to_give ( raw_mat2_to_give - ( manufacturer-raw-capacity - cur_raw_mat2 ) )
+              set raw_material_2_count manufacturer-raw-capacity ; considered as full
             ]
 
             ;;;;;;;;;;;;;;;;;;;;
@@ -964,8 +968,8 @@ to extractor-transport ; extractor transporter procedure
               set raw_mat3_to_give 0
             ]
             [
-              set raw_material_3_count manufacturer-raw-capacity ; considered as full
               set raw_mat3_to_give ( raw_mat3_to_give - ( manufacturer-raw-capacity - cur_raw_mat3 ) )
+              set raw_material_3_count manufacturer-raw-capacity ; considered as full
             ]
 
             ;;;;;;;;;;;;;;;;;;;;
@@ -977,8 +981,8 @@ to extractor-transport ; extractor transporter procedure
               set raw_mat4_to_give 0
             ]
             [
-              set raw_material_4_count manufacturer-raw-capacity ; considered as full
               set raw_mat4_to_give ( raw_mat4_to_give - ( manufacturer-raw-capacity - cur_raw_mat4 ) )
+              set raw_material_4_count manufacturer-raw-capacity ; considered as full
             ]
 
           ]
@@ -997,7 +1001,7 @@ to extractor-transport ; extractor transporter procedure
           set start_patch (patch-here)
 
           ; If there are remaining cargo, reroute
-          ifelse remaining_stocks > 0 [
+          ifelse remaining_stocks > ((manufacturer-raw-capacity * 4) * reroute-threshold) [
             set destination_type "reroute"
             ifelse [pycor] of patch-here = 3
             [ set destination patch 1 -13 ]
@@ -1143,7 +1147,7 @@ to hospital-transport ; hospital transporter procedure
           set start_patch (patch-here)
 
           ; If there are remaining cargo, reroute
-          ifelse remaining_stocks > 0 [
+          ifelse remaining_stocks > ((load-capacity * 4) * reroute-threshold) [
             set destination_type "reroute"
             ifelse [pycor] of patch-here = 3
             [ set destination patch 20 -13 ]
@@ -1398,6 +1402,7 @@ end
 ; Function at each time step (tick)
 to go
 
+  if ticks = 10000 [ stop ]
   ; Extractor procedure
   extract
 
@@ -1419,9 +1424,9 @@ to go
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-508
+507
 28
-1299
+1298
 486
 -1
 -1
@@ -1965,6 +1970,21 @@ false
 "" ""
 PENS
 "Dead" 1.0 0 -16777216 true "" "plot dead-patients"
+
+SLIDER
+267
+260
+439
+293
+reroute-threshold
+reroute-threshold
+0
+1
+0.4
+0.05
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
