@@ -7,6 +7,7 @@ globals[
   manufacturer-drop-offs
   hospital-drop-offs
   intersections
+  dead-patients
 ]
 
 ; Initialize the breeds
@@ -184,11 +185,14 @@ to setup-agents
   create-manufacturers 2[
     set size 12
     set color brown
-    set warehouse_capacity manufacturer-capacity
-    set glove_stock manufacturer-capacity
-    set ppe_stock manufacturer-capacity
-    set mask_stock manufacturer-capacity
-    set syringe_stock manufacturer-capacity
+    set raw_material_1_count manufacturer-raw-capacity
+    set raw_material_2_count manufacturer-raw-capacity
+    set raw_material_3_count manufacturer-raw-capacity
+    set raw_material_4_count manufacturer-raw-capacity
+    set glove_stock 0
+    set ppe_stock 0
+    set mask_stock 0
+    set syringe_stock 0
   ]
   create-hospitals 2 [
     set size 12
@@ -204,7 +208,7 @@ to setup-agents
     set syringe_stock syringe-capacity
   ]
 
-   create-patients 10 [
+   create-patients 80 [
     set size 1
     set color orange
     set health initial-health
@@ -214,6 +218,10 @@ to setup-agents
     set size  2
     set color red
     set destination_type "delivery"
+    set raw_material_1_count extractor-capacity
+    set raw_material_2_count extractor-capacity
+    set raw_material_3_count extractor-capacity
+    set raw_material_4_count extractor-capacity
   ]
 
   create-hosp-transporters (transporter-multiplier * 2)[
@@ -230,6 +238,8 @@ end
 
 ; Places each non-moving breed in the grid
 to setup-positions
+
+  set dead-patients 0
 
   ; Hospitals
   let n 9
@@ -559,7 +569,7 @@ end
 ; Creates a patient in near the hospitals
 to spawn-patient
 
-  if coin-flip?
+  if random 10 = 0
   [
     create-patients 1
     [
@@ -620,7 +630,7 @@ end
 
 ; Randomize choice
 to-report coin-flip?
-  report random 1 = 0
+  report random 2 = 0
 end
 
 ; Allows the extractor transporters to change lanes
@@ -826,11 +836,6 @@ to extractor-transport ; extractor transporter procedure
       let tran_cur_raw_mat3_count raw_material_3_count
       let tran_cur_raw_mat4_count raw_material_4_count
 
-      ; Switch start patch and destination patch
-      let temp_dest (destination)
-      set destination (start_patch)
-      set start_patch (temp_dest)
-
       (
 
         ; Check if y-coordinate is 3 (upper extractor)
@@ -892,6 +897,11 @@ to extractor-transport ; extractor transporter procedure
           set raw_material_3_count raw_mat3_to_get
           set raw_material_4_count raw_mat4_to_get
 
+          ; Switch start patch and destination patch
+          let temp_dest (destination)
+          set destination (start_patch)
+          set start_patch (temp_dest)
+
        ]
 
         ; Check if y-coordinate is 3 (upper manufacturer)
@@ -922,53 +932,53 @@ to extractor-transport ; extractor transporter procedure
             ;;;;;;;;;;;;;;;;;;;;
             ;; Raw Material 1 ;;
             ;;;;;;;;;;;;;;;;;;;;
-            ifelse ( raw_mat1_to_give + cur_raw_mat1 ) <= manufacturer-capacity
+            ifelse ( raw_mat1_to_give + cur_raw_mat1 ) <= manufacturer-raw-capacity
             [
               set raw_material_1_count ( raw_mat1_to_give + cur_raw_mat1 ) ; add raw material, limit is the manufacturer capacity
               set raw_mat1_to_give 0
             ]
             [
-              set raw_material_1_count manufacturer-capacity ; considered as full
-              set raw_mat1_to_give ( raw_mat1_to_give - ( manufacturer-capacity - cur_raw_mat1 ) )
+              set raw_material_1_count manufacturer-raw-capacity ; considered as full
+              set raw_mat1_to_give ( raw_mat1_to_give - ( manufacturer-raw-capacity - cur_raw_mat1 ) )
             ]
 
             ;;;;;;;;;;;;;;;;;;;;
             ;; Raw Material 2 ;;
             ;;;;;;;;;;;;;;;;;;;;
-            ifelse ( raw_mat2_to_give + cur_raw_mat2 ) <= manufacturer-capacity
+            ifelse ( raw_mat2_to_give + cur_raw_mat2 ) <= manufacturer-raw-capacity
             [
               set raw_material_2_count ( raw_mat2_to_give + cur_raw_mat2 ) ; add raw material, limit is the manufacturer capacity
               set raw_mat2_to_give 0
             ]
             [
-              set raw_material_2_count manufacturer-capacity ; considered as full
-              set raw_mat2_to_give ( raw_mat2_to_give - ( manufacturer-capacity - cur_raw_mat2 ) )
+              set raw_material_2_count manufacturer-raw-capacity ; considered as full
+              set raw_mat2_to_give ( raw_mat2_to_give - ( manufacturer-raw-capacity - cur_raw_mat2 ) )
             ]
 
             ;;;;;;;;;;;;;;;;;;;;
             ;; Raw Material 3 ;;
             ;;;;;;;;;;;;;;;;;;;;
-            ifelse ( raw_mat3_to_give + cur_raw_mat3 ) <= manufacturer-capacity
+            ifelse ( raw_mat3_to_give + cur_raw_mat3 ) <= manufacturer-raw-capacity
             [
               set raw_material_3_count ( raw_mat3_to_give + cur_raw_mat3 ) ; add raw material, limit is the manufacturer capacity
               set raw_mat3_to_give 0
             ]
             [
-              set raw_material_3_count manufacturer-capacity ; considered as full
-              set raw_mat3_to_give ( raw_mat3_to_give - ( manufacturer-capacity - cur_raw_mat3 ) )
+              set raw_material_3_count manufacturer-raw-capacity ; considered as full
+              set raw_mat3_to_give ( raw_mat3_to_give - ( manufacturer-raw-capacity - cur_raw_mat3 ) )
             ]
 
             ;;;;;;;;;;;;;;;;;;;;
             ;; Raw Material 4 ;;
             ;;;;;;;;;;;;;;;;;;;;
-            ifelse ( raw_mat4_to_give + cur_raw_mat4 ) <= manufacturer-capacity
+            ifelse ( raw_mat4_to_give + cur_raw_mat4 ) <= manufacturer-raw-capacity
             [
               set raw_material_4_count ( raw_mat4_to_give + cur_raw_mat4 ) ; add raw material, limit is the manufacturer capacity
               set raw_mat4_to_give 0
             ]
             [
-              set raw_material_4_count manufacturer-capacity ; considered as full
-              set raw_mat4_to_give ( raw_mat4_to_give - ( manufacturer-capacity - cur_raw_mat4 ) )
+              set raw_material_4_count manufacturer-raw-capacity ; considered as full
+              set raw_mat4_to_give ( raw_mat4_to_give - ( manufacturer-raw-capacity - cur_raw_mat4 ) )
             ]
 
           ]
@@ -979,6 +989,39 @@ to extractor-transport ; extractor transporter procedure
           set raw_material_2_count (raw_mat2_to_give)
           set raw_material_3_count (raw_mat3_to_give)
           set raw_material_4_count (raw_mat4_to_give)
+          let remaining_stocks 0
+
+          set remaining_stocks (raw_material_1_count + raw_material_2_count + raw_material_3_count + raw_material_4_count)
+
+          ; Switch start patch and destination patch
+          set start_patch (patch-here)
+
+          ; If there are remaining cargo, reroute
+          ifelse remaining_stocks > 0 [
+            set destination_type "reroute"
+            ifelse [pycor] of patch-here = 3
+            [ set destination patch 1 -13 ]
+            [ set destination patch 1  3  ]
+          ]
+          [
+            set destination_type "delivery"
+
+            let extractor0_stocks 0
+            let extractor1_stocks 0
+
+            ask extractor 0
+            [ set extractor0_stocks (raw_material_1_count + raw_material_2_count + raw_material_3_count + raw_material_4_count) ]
+
+            ask extractor 1
+            [ set extractor1_stocks (raw_material_1_count + raw_material_2_count + raw_material_3_count + raw_material_4_count) ]
+
+
+            ; Check which factory has more stocks
+            ifelse extractor0_stocks > extractor1_stocks
+            [ set destination patch -21  3 ]
+            [ set destination patch -21 -13 ]
+
+          ]
 
         ]
 
@@ -990,7 +1033,14 @@ to extractor-transport ; extractor transporter procedure
     ]
 
     ; Rotate if in an intersection
+    ifelse destination_type = "delivery"
+    [
     rotate-ext-transporters
+    ]
+    [
+     rotate-rerouting-hosp-transporters
+    ]
+
 
     forward 1
     display
@@ -1277,55 +1327,55 @@ to manufacture ; manufacturer procedure
   [
 
     if ; Create a pair of gloves
-    raw_material_1_count >= 5 and
+    raw_material_1_count >= 1 and
     raw_material_2_count >= 1 and
-    raw_material_3_count >= 2 and
-    raw_material_4_count >= 4
+    raw_material_3_count >= 1 and
+    raw_material_4_count >= 1
     [
       set glove_stock (glove_stock + 1)
-      set raw_material_1_count ( raw_material_1_count - 5 )
+      set raw_material_1_count ( raw_material_1_count - 1 )
       set raw_material_2_count ( raw_material_2_count - 1 )
-      set raw_material_3_count ( raw_material_3_count - 2 )
-      set raw_material_4_count ( raw_material_4_count - 4 )
+      set raw_material_3_count ( raw_material_3_count - 1 )
+      set raw_material_4_count ( raw_material_4_count - 1 )
     ]
 
     if ; Create a PPE
-    raw_material_1_count >= 5 and
-    raw_material_2_count >= 5 and
-    raw_material_3_count >= 5 and
-    raw_material_4_count >= 2
+    raw_material_1_count >= 1 and
+    raw_material_2_count >= 1 and
+    raw_material_3_count >= 1 and
+    raw_material_4_count >= 1
     [
       set ppe_stock (ppe_stock + 1)
-      set raw_material_1_count ( raw_material_1_count - 5 )
-      set raw_material_2_count ( raw_material_2_count - 5 )
-      set raw_material_3_count ( raw_material_3_count - 5 )
-      set raw_material_4_count ( raw_material_4_count - 2 )
+      set raw_material_1_count ( raw_material_1_count - 1 )
+      set raw_material_2_count ( raw_material_2_count - 1 )
+      set raw_material_3_count ( raw_material_3_count - 1 )
+      set raw_material_4_count ( raw_material_4_count - 1 )
     ]
 
     if ; Create a mask
-    raw_material_1_count >= 2 and
-    raw_material_2_count >= 2 and
-    raw_material_3_count >= 5 and
-    raw_material_4_count >= 2
+    raw_material_1_count >= 1 and
+    raw_material_2_count >= 1 and
+    raw_material_3_count >= 1 and
+    raw_material_4_count >= 1
     [
-      set mask_stock (ppe_stock + 1)
-      set raw_material_1_count ( raw_material_1_count - 2 )
-      set raw_material_2_count ( raw_material_2_count - 2 )
-      set raw_material_3_count ( raw_material_3_count - 5 )
-      set raw_material_4_count ( raw_material_4_count - 2 )
+      set mask_stock (mask_stock + 1)
+      set raw_material_1_count ( raw_material_1_count - 1 )
+      set raw_material_2_count ( raw_material_2_count - 1 )
+      set raw_material_3_count ( raw_material_3_count - 1 )
+      set raw_material_4_count ( raw_material_4_count - 1 )
     ]
 
 
     if ; Create a syringe
     raw_material_1_count >= 1 and
-    raw_material_2_count >= 5 and
-    raw_material_3_count >= 5 and
+    raw_material_2_count >= 1 and
+    raw_material_3_count >= 1 and
     raw_material_4_count >= 1
     [
       set syringe_stock (syringe_stock + 1)
       set raw_material_1_count ( raw_material_1_count - 1 )
-      set raw_material_2_count ( raw_material_2_count - 5 )
-      set raw_material_3_count ( raw_material_3_count - 5 )
+      set raw_material_2_count ( raw_material_2_count - 1 )
+      set raw_material_3_count ( raw_material_3_count - 1 )
       set raw_material_4_count ( raw_material_4_count - 1 )
     ]
 
@@ -1338,6 +1388,7 @@ to death
   if health < 0 [
     ; count patients that died with color black
     set color black
+    set dead-patients dead-patients + 1
     die
   ]
 
@@ -1361,17 +1412,17 @@ to go
 
   ; Patient procedures
   patient-move
-  ; spawn-patient
+  spawn-patient
 
   tick
 
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-534
-16
-1325
-474
+508
+28
+1299
+486
 -1
 -1
 12.85
@@ -1420,7 +1471,7 @@ transporter-multiplier
 transporter-multiplier
 1
 10
-1.0
+2.0
 1
 1
 NIL
@@ -1443,9 +1494,9 @@ SLIDER
 175
 extractor-capacity
 extractor-capacity
-10
 100
-100.0
+1000
+1000.0
 1
 1
 per item
@@ -1459,8 +1510,8 @@ SLIDER
 extraction-rate-prob
 extraction-rate-prob
 2
-10
-6.0
+100
+100.0
 1
 1
 per item
@@ -1479,28 +1530,28 @@ Extractor variables
 SLIDER
 264
 25
-484
+493
 58
-manufacturer-capacity
-manufacturer-capacity
-10
+manufacturer-product-capacity
+manufacturer-product-capacity
 100
-100.0
-1
+1000
+1000.0
+100
 1
 items
 HORIZONTAL
 
 SLIDER
-264
-76
-484
-109
+266
+113
+494
+146
 manufacture-rate
 manufacture-rate
 1
 100
-25.0
+100.0
 1
 1
 items per tick
@@ -1517,106 +1568,76 @@ Manufacturer variables
 1
 
 SLIDER
-10
+9
 241
-230
+229
 274
 patient-capacity
 patient-capacity
 10
 100
-20.0
+100.0
 1
 1
 patients
 HORIZONTAL
 
 SLIDER
-1050
-527
-1273
-560
-admission-rate
-admission-rate
-10
-100
-10.0
-1
-1
-patients per tick
-HORIZONTAL
-
-SLIDER
-1051
-564
-1274
-597
-release-rate
-release-rate
-0
-100
-37.0
-1
-1
-patients per tick
-HORIZONTAL
-
-SLIDER
-8
-369
-231
-402
+9
+329
+232
+362
 ppe-capacity
 ppe-capacity
-0
 100
-25.0
-1
+1000
+900.0
+100
 1
 PPEs
 HORIZONTAL
 
 SLIDER
-10
-285
-230
-318
+12
+372
+232
+405
 mask-capacity
 mask-capacity
-0
 100
-25.0
-1
+1000
+800.0
+100
 1
 masks
 HORIZONTAL
 
 SLIDER
-8
-411
-232
-444
+9
+286
+233
+319
 glove-capacity
 glove-capacity
-0
 100
-25.0
-1
+1000
+1000.0
+100
 1
 gloves
 HORIZONTAL
 
 SLIDER
-9
-327
-230
-360
+11
+415
+232
+448
 syringe-capacity
 syringe-capacity
-0
 100
-25.0
-1
+1000
+700.0
+100
 1
 syringes
 HORIZONTAL
@@ -1648,39 +1669,29 @@ SLIDER
 59
 load-capacity
 load-capacity
-1
 100
-50.0
+1000
+1000.0
 1
 1
 per item
 HORIZONTAL
 
 TEXTBOX
-901
-560
-1051
-578
-Just for later (if ever)
-11
-15.0
-1
-
-TEXTBOX
-265
-126
-415
-144
+266
+159
+416
+177
 Patient variables
 11
 0.0
 1
 
 SLIDER
-263
-141
-484
-174
+265
+181
+494
+214
 initial-health
 initial-health
 0
@@ -1709,32 +1720,10 @@ NIL
 1
 
 MONITOR
-1363
-20
-1506
-65
-ppe stocks of hosp 4
-[ ppe_stock ] of hospital 4
-17
-1
-11
-
-MONITOR
-1363
-75
-1494
-120
-glove stock of hosp 4
-[glove_stock] of hospital 4
-17
-1
-11
-
-MONITOR
-1363
-129
-1491
-174
+1515
+27
+1643
+72
 mask stock of hosp 4
 [mask_stock] of hospital 4
 17
@@ -1742,10 +1731,10 @@ mask stock of hosp 4
 11
 
 MONITOR
-1362
-185
-1519
-230
+1649
+28
+1771
+73
 syringe stock of hosp 4
 [syringe_stock] of hospital 4
 17
@@ -1753,21 +1742,21 @@ syringe stock of hosp 4
 11
 
 MONITOR
-1553
-20
-1684
-65
-glove stock of hosp 5
+1304
+79
+1383
+124
+gloves hosp 5
 [glove_stock] of hospital 5
 17
 1
 11
 
 MONITOR
-1553
-75
-1674
-120
+1388
+78
+1509
+123
 ppe stock of hosp 5
 [ppe_stock] of hospital 5
 17
@@ -1775,10 +1764,10 @@ ppe stock of hosp 5
 11
 
 MONITOR
-1553
-130
-1681
-175
+1516
+80
+1644
+125
 mask stock of hosp 5
 [mask_stock] of hospital 5
 17
@@ -1786,15 +1775,196 @@ mask stock of hosp 5
 11
 
 MONITOR
-1555
-184
-1696
-229
-syringe stock of hosp 5
+1650
+80
+1772
+125
+syringe hosp 5
 [syringe_stock] of hospital 5
 17
 1
 11
+
+SLIDER
+265
+71
+493
+104
+manufacturer-raw-capacity
+manufacturer-raw-capacity
+100
+1000
+1000.0
+1
+1
+NIL
+HORIZONTAL
+
+PLOT
+1305
+388
+1543
+508
+Hospital 1 Stocks
+time
+stocks
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"Gloves" 1.0 0 -11053225 true "" "plot [glove_stock] of hospital 4"
+"PPE" 1.0 0 -11221820 true "" "plot [ppe_stock] of hospital 4"
+"Mask" 1.0 0 -2674135 true "" "plot [mask_stock] of hospital 4"
+"Syringe" 1.0 0 -7171555 true "" "plot [syringe_stock] of hospital 4"
+
+MONITOR
+1304
+28
+1384
+73
+gloves hosp 4
+[glove_stock] of hospital 4
+17
+1
+11
+
+MONITOR
+1390
+27
+1509
+72
+ppe stocks of hosp 4
+[ ppe_stock ] of hospital 4
+17
+1
+11
+
+PLOT
+1547
+388
+1784
+508
+Hospital 2 Stocks
+time
+stocks
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"Gloves" 1.0 0 -11053225 true "" "plot [glove_stock] of hospital 5"
+"PPE" 1.0 0 -11221820 true "" "plot [ppe_stock] of hospital 5"
+"Mask" 1.0 0 -2674135 true "" "plot [mask_stock] of hospital 5"
+"Syrine" 1.0 0 -7171555 true "" "plot [syringe_stock] of hospital 5"
+
+PLOT
+1305
+259
+1543
+381
+Manufacturer 1 Stocks
+time
+stocks
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"Gloves" 1.0 0 -11053225 true "" "plot [glove_stock] of factory 2"
+"PPE" 1.0 0 -11221820 true "" "plot [glove_stock] of factory 2"
+"Mask" 1.0 0 -2674135 true "" "plot [glove_stock] of factory 2"
+"Syringe" 1.0 0 -7171555 true "" "plot [glove_stock] of factory 2"
+
+PLOT
+1547
+258
+1786
+380
+Manufacturer 2 Stocks
+time
+stocks
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"Gloves" 1.0 0 -11053225 true "" "plot [glove_stock] of factory 3"
+"PPE" 1.0 0 -11221820 true "" "plot [ppe_stock] of factory 3"
+"Mask" 1.0 0 -2674135 true "" "plot [mask_stock] of factory 3"
+"Syringe" 1.0 0 -7171555 true "" "plot [syringe_stock] of factory 3"
+
+PLOT
+1305
+131
+1543
+252
+Extractor 1 Materials
+time
+count
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"Raw 1" 1.0 0 -11053225 true "" "plot [raw_material_1_count] of extractor 0"
+"Raw 2" 1.0 0 -11221820 true "" "plot [raw_material_2_count] of extractor 0"
+"Raw 3" 1.0 0 -2674135 true "" "plot [raw_material_3_count] of extractor 0"
+"Raw 4" 1.0 0 -7171555 true "" "plot [raw_material_4_count] of extractor 0"
+
+PLOT
+1546
+131
+1782
+252
+Extractor 2 Materials
+time
+count
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"Raw 1" 1.0 0 -11053225 true "" "plot [raw_material_1_count] of extractor 1"
+"Raw 2" 1.0 0 -11221820 true "" "plot [raw_material_2_count] of extractor 1"
+"Raw 3" 1.0 0 -2674135 true "" "plot [raw_material_3_count] of extractor 1"
+"Raw 4" 1.0 0 -7171555 true "" "plot [raw_material_4_count] of extractor 1"
+
+PLOT
+1305
+516
+1783
+666
+Dead Patients
+time
+deaths
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"Dead" 1.0 0 -16777216 true "" "plot dead-patients"
 
 @#$#@#$#@
 ## WHAT IS IT?
