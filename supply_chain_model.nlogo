@@ -391,8 +391,8 @@ to patient-move foreach sort patients [p ->
         [
          ;set color orange
 
-        ; hide the turtle
-        ; hide-turtle
+         ; hide the turtle
+         ; hide-turtle
 
         ; increment patient count in the hospital if the patient is already in the hospital
         ask hospital hosp_number
@@ -402,6 +402,8 @@ to patient-move foreach sort patients [p ->
           [
             ; print "admitting patient"
             set patient_count patient_count + 1
+            set syringe_stock syringe_stock - 1 ; dextrose
+
             ask p [
               set color green
               set size 1
@@ -449,8 +451,6 @@ to patient-move foreach sort patients [p ->
               ]
             ]
           ]
-
-
       ]
       [
         ; these agents are already at the hospital but there is a chance that they are not yet admitted
@@ -480,10 +480,7 @@ to patient-move foreach sort patients [p ->
                   ; decrement hospital stock at each time step for each patient
                   ask hospital hosp_number
                   [
-                    set glove_stock glove_stock - 1
-                    set ppe_stock ppe_stock - 1
                     set mask_stock mask_stock - 1
-                    set syringe_stock syringe_stock - 1
                   ]
                   ; and heal the patient
                   ; print "HEALING THE PATIENT"
@@ -496,8 +493,8 @@ to patient-move foreach sort patients [p ->
             ask p
             [
               ;print "admitted but no stock of medical equipment. decreasing health"
-              set color orange
-
+              ; set color orange
+              ; wait to die, do not change to orange
 
               set health health - 1
               death
@@ -609,6 +606,8 @@ to spawn-patient
 
 
 end
+
+
 
 ; Get the patch of a turtle
 to-report get-patch [turt]
@@ -1397,6 +1396,25 @@ to manufacture ; manufacturer procedure
 
 end
 
+; decrement ppe on every fixed interval
+; decrement gloves on every fixed interval, but lower interval than ppe
+; decrement syringe on every fixed interval?
+to hospital-decrement-ppe foreach sort hospitals [h ->
+  ; fixed interval
+  if ticks mod 42 = 0
+  [
+    ask h
+    [
+      ; randomize the 0.50 multiplier
+      set ppe_stock (ppe_stock - patient-capacity * 0.50)
+      set glove_stock (ppe_stock - patient-capacity * 0.50)
+    ]
+  ]
+
+
+]
+end
+
 ; function to kill a patient if health reaches 0
 to death
   if health < 0 [
@@ -1434,6 +1452,7 @@ to go
   ; Patient procedures
   patient-move
   spawn-patient
+  hospital-decrement-ppe
 
   tick
 
@@ -1754,7 +1773,7 @@ BUTTON
 529
 Go
 go
-NIL
+T
 1
 T
 OBSERVER
@@ -2347,7 +2366,7 @@ Circle -7500403 false true 174 234 42
 Circle -7500403 false true 174 114 42
 Circle -7500403 false true 174 24 42
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.1.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
