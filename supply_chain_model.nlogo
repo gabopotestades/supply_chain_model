@@ -8,6 +8,7 @@ globals[
   hospital-drop-offs
   intersections
   dead-patients
+  cured-patients
 ]
 
 ; Initialize the breeds
@@ -244,6 +245,7 @@ end
 to setup-positions
 
   set dead-patients 0
+  set cured-patients 0
 
   ; Hospitals
   let n 9
@@ -395,8 +397,6 @@ to patient-move foreach sort patients [p ->
           [
             ; print "admitting patient"
             set patient_count patient_count + 1
-            set syringe_stock syringe_stock - 1 ; decrement dextrose
-
             ask p [
               set color green
               set size 1
@@ -461,6 +461,7 @@ to patient-move foreach sort patients [p ->
                 ifelse (health >= 90)
                 [
                   ; print "now healthy, discharging patient alive"
+                  discharge
                   die
                   ; discharge alive
                   ask hospital hosp_number
@@ -488,8 +489,7 @@ to patient-move foreach sort patients [p ->
             ask p
             [
               ;print "admitted but no stock of medical equipment. decreasing health"
-              ; set color orange
-              ; wait to die here instead
+              set color orange
 
 
               set health health - 1
@@ -1390,21 +1390,8 @@ to manufacture ; manufacturer procedure
 
 end
 
-; decrement ppe on every fixed interval
-; decrement gloves on every fixed interval, but lower interval than ppe
-to hospital-decrement-ppe foreach sort hospitals [h ->
-  ; fixed interval
-  if ticks mod 42 = 0
-  [
-    ask h
-    [
-      print "decrementing ppe and glove stock"
-      ; randomize the 0.25 multiplier
-      set ppe_stock (ppe_stock - patient-capacity * 0.25)
-      set glove_stock (ppe_stock - patient-capacity * 0.25)
-    ]
-  ]
-]
+to discharge
+  set cured-patients cured-patients + 1
 end
 
 ; function to kill a patient if health reaches 0
@@ -1438,7 +1425,7 @@ to go
   ; Patient procedures
   patient-move
   spawn-patient
-  hospital-decrement-ppe
+
   tick
 
 end
@@ -1471,9 +1458,9 @@ ticks
 30.0
 
 BUTTON
-537
+509
 496
-601
+573
 529
 Setup
 setup
@@ -1721,11 +1708,28 @@ initial-health
 initial-health
 0
 100
-10.0
+41.0
 1
 1
 NIL
 HORIZONTAL
+
+BUTTON
+585
+496
+648
+529
+Go
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 MONITOR
 1515
@@ -1889,9 +1893,9 @@ true
 "" ""
 PENS
 "Gloves" 1.0 0 -11053225 true "" "plot [glove_stock] of factory 2"
-"PPE" 1.0 0 -11221820 true "" "plot [glove_stock] of factory 2"
-"Mask" 1.0 0 -2674135 true "" "plot [glove_stock] of factory 2"
-"Syringe" 1.0 0 -7171555 true "" "plot [glove_stock] of factory 2"
+"PPE" 1.0 0 -11221820 true "" "plot [ppe_stock] of factory 2"
+"Mask" 1.0 0 -2674135 true "" "plot [mask_stock] of factory 2"
+"Syringe" 1.0 0 -7171555 true "" "plot [syringe_stock] of factory 2"
 
 PLOT
 1547
@@ -1961,24 +1965,25 @@ PLOT
 516
 1783
 666
-Dead Patients
+Patient Mortality Rate
 time
-deaths
+mortality rate
 0.0
 10.0
 0.0
 10.0
 true
-false
+true
 "" ""
 PENS
 "Dead" 1.0 0 -16777216 true "" "plot dead-patients"
+"Discharged" 1.0 0 -14439633 true "" "plot cured-patients"
 
 SLIDER
-270
+268
+227
+494
 260
-442
-293
 reroute-threshold
 reroute-threshold
 0
@@ -1989,22 +1994,57 @@ reroute-threshold
 NIL
 HORIZONTAL
 
-BUTTON
-613
-496
-676
-529
-Go
-go
-T
+MONITOR
+761
+571
+885
+616
+Discharged Patients
+cured-patients
+17
 1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
+11
+
+MONITOR
+762
+622
+885
+667
+Dead Patients
+dead-patients
+17
 1
+11
+
+PLOT
+896
+516
+1296
+666
+Patient Count
+time
+patient count
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"default" 1.0 0 -14439633 true "" "plot [patient_count] of hospital 4"
+"pen-1" 1.0 0 -12345184 true "" "plot [patient_count] of hospital 5"
+
+MONITOR
+762
+518
+888
+563
+Total Patients
+[patient_count] of hospital 4 + [patient_count] of hospital 5
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -2164,7 +2204,7 @@ Circle -7500403 false true 174 234 42
 Circle -7500403 false true 174 114 42
 Circle -7500403 false true 174 24 42
 @#$#@#$#@
-NetLogo 6.1.1
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
