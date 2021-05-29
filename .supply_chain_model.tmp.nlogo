@@ -9,7 +9,6 @@ globals[
   intersections
   dead-patients
   cured-patients ;for discharged patients
-
 ]
 
 ; Initialize the breeds
@@ -214,10 +213,8 @@ to setup-agents
     set syringe_stock syringe-capacity
   ]
 
-
   ; Changed '80' to init-patient-count slider
    create-patients initial-patient-count [
-
     set size 1
     set color orange
     set health initial-health
@@ -250,7 +247,6 @@ to setup-positions
 
   set dead-patients 0
   set cured-patients 0
-
 
   ; Hospitals
   let n 9
@@ -466,9 +462,7 @@ to patient-move foreach sort patients [p ->
                 ifelse (health >= 90)
                 [
                   ; print "now healthy, discharging patient alive"
-
                   discharge
-
                   die
                   ; discharge alive
                   ask hospital hosp_number
@@ -1407,12 +1401,10 @@ to death
   ]
 
   ; here add a monitor based on the number of people that died
-
 end
 
 to discharge
   set cured-patients cured-patients + 1
-
 end
 
 ; Function at each time step (tick)
@@ -1471,7 +1463,6 @@ BUTTON
 494
 572
 527
-
 Setup
 setup
 NIL
@@ -1493,9 +1484,7 @@ transporter-multiplier
 transporter-multiplier
 1
 10
-
 10.0
-
 1
 1
 NIL
@@ -1519,11 +1508,9 @@ SLIDER
 extractor-capacity
 extractor-capacity
 100
-
 5000
 1530.0
 10
-
 1
 per item
 HORIZONTAL
@@ -1560,12 +1547,10 @@ SLIDER
 58
 manufacturer-product-capacity
 manufacturer-product-capacity
-
 100
 5000
 2140.0
 10
-
 1
 items
 HORIZONTAL
@@ -1573,18 +1558,13 @@ HORIZONTAL
 SLIDER
 266
 113
-
 497
-
-
 146
 manufacture-rate
 manufacture-rate
 1
-
 500
 110.0
-
 1
 1
 items per tick
@@ -1623,10 +1603,8 @@ SLIDER
 ppe-capacity
 ppe-capacity
 100
-
 2500
 2500.0
-
 100
 1
 PPEs
@@ -1640,10 +1618,8 @@ SLIDER
 mask-capacity
 mask-capacity
 100
-
 2500
 2500.0
-
 100
 1
 masks
@@ -1657,10 +1633,8 @@ SLIDER
 glove-capacity
 glove-capacity
 100
-
 2500
 2500.0
-
 100
 1
 gloves
@@ -1674,10 +1648,8 @@ SLIDER
 syringe-capacity
 syringe-capacity
 100
-
 2500
 2500.0
-
 100
 1
 syringes
@@ -1711,10 +1683,8 @@ SLIDER
 load-capacity
 load-capacity
 100
-
 5000
 1558.0
-
 1
 1
 per item
@@ -1739,107 +1709,7 @@ initial-health
 initial-health
 0
 100
-
 30.0
-
-1
-1
-NIL
-HORIZONTAL
-
-BUTTON
-613
-496
-676
-529
-Go
-go
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-MONITOR
-1515
-27
-1643
-72
-mask stock of hosp 4
-[mask_stock] of hospital 4
-17
-1
-11
-
-MONITOR
-1649
-28
-1771
-73
-syringe stock of hosp 4
-[syringe_stock] of hospital 4
-17
-1
-11
-
-MONITOR
-1304
-79
-1383
-124
-gloves hosp 5
-[glove_stock] of hospital 5
-17
-1
-11
-
-MONITOR
-1388
-78
-1509
-123
-ppe stock of hosp 5
-[ppe_stock] of hospital 5
-17
-1
-11
-
-MONITOR
-1516
-80
-1644
-125
-mask stock of hosp 5
-[mask_stock] of hospital 5
-17
-1
-11
-
-MONITOR
-1650
-80
-1772
-125
-syringe hosp 5
-[syringe_stock] of hospital 5
-17
-1
-11
-
-SLIDER
-265
-71
-493
-104
-manufacturer-raw-capacity
-manufacturer-raw-capacity
-100
-1000
-1000.0
 1
 1
 NIL
@@ -2024,7 +1894,6 @@ true
 "" ""
 PENS
 "Gloves" 1.0 0 -11053225 true "" "plot [glove_stock] of factory 2"
-
 "PPE" 1.0 0 -11221820 true "" "plot [ppe_stock] of factory 2"
 "Mask" 1.0 0 -2674135 true "" "plot [mask_stock] of factory 2"
 "Syringe" 1.0 0 -7171555 true "" "plot [syringe_stock] of factory 2"
@@ -2093,13 +1962,11 @@ PENS
 "Raw 4" 1.0 0 -7171555 true "" "plot [raw_material_4_count] of extractor 1"
 
 PLOT
-
 788
 516
 1294
 690
 Patient Discharge Rate
-
 time
 deaths
 0.0
@@ -2107,7 +1974,6 @@ deaths
 0.0
 10.0
 true
-
 true
 "" ""
 PENS
@@ -2119,14 +1985,11 @@ SLIDER
 265
 493
 298
-
 reroute-threshold
 reroute-threshold
 0
 1
-
 0.45
-
 0.05
 1
 NIL
@@ -2187,7 +2050,6 @@ cured-patients
 17
 1
 11
-
 
 @#$#@#$#@
 ## WHAT IS IT?
