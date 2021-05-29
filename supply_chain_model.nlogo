@@ -213,7 +213,7 @@ to setup-agents
     set syringe_stock syringe-capacity
   ]
 
-   create-patients 80 [
+   create-patients initial-count [
     set size 1
     set color orange
     set health initial-health
@@ -1700,10 +1700,10 @@ Patient variables
 1
 
 SLIDER
-265
-181
-494
-214
+264
+182
+493
+215
 initial-health
 initial-health
 0
@@ -1980,10 +1980,10 @@ PENS
 "Discharged" 1.0 0 -14439633 true "" "plot cured-patients"
 
 SLIDER
-268
-227
-494
-260
+261
+280
+487
+313
 reroute-threshold
 reroute-threshold
 0
@@ -2045,6 +2045,21 @@ Total Patients
 17
 1
 11
+
+SLIDER
+268
+230
+440
+263
+initial-count
+initial-count
+0
+100
+50.0
+1
+1
+patients
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
