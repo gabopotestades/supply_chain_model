@@ -453,7 +453,7 @@ to patient-move foreach sort patients [p ->
         ask hospital hosp_number
         [
           ; further check if there are stocks
-          ifelse(glove_stock > 0 and ppe_stock > 0 and mask_stock > 0 and syringe_stock > 0)
+          ifelse(mask_stock > 0)
             [
               ask p
               [
@@ -1151,7 +1151,8 @@ to hospital-transport ; hospital transporter procedure
           set start_patch (patch-here)
 
           ; If there are remaining cargo, reroute
-          ifelse remaining_stocks > ((load-capacity * 4) * reroute-threshold) [
+          ; ifelse remaining_stocks > ((load-capacity * 4) * reroute-threshold) [
+          ifelse mask_stock > mask_stock * reroute-threshold [
             set destination_type "reroute"
             ifelse [pycor] of patch-here = 3
             [ set destination patch 20 -13 ]
@@ -1405,7 +1406,7 @@ end
 ; decrement gloves on every fixed interval, but lower interval than ppe
 to hospital-decrement-ppe foreach sort hospitals [h ->
   ; fixed interval
-  if ticks mod 42 = 0
+  if ticks mod 47 = 0
   [
     ask h
     [
@@ -1512,7 +1513,7 @@ transporter-multiplier
 transporter-multiplier
 1
 10
-6.0
+2.0
 1
 1
 NIL
@@ -1537,8 +1538,8 @@ extractor-capacity
 extractor-capacity
 100
 1000
-1000.0
-1
+100.0
+100
 1
 per item
 HORIZONTAL
@@ -1552,7 +1553,7 @@ extraction-rate-prob
 extraction-rate-prob
 2
 100
-100.0
+9.0
 1
 1
 per item
@@ -1575,10 +1576,10 @@ SLIDER
 58
 manufacturer-product-capacity
 manufacturer-product-capacity
-10
+100
 5000
-5000.0
-10
+2300.0
+100
 1
 items
 HORIZONTAL
@@ -1590,10 +1591,10 @@ SLIDER
 146
 manufacture-rate
 manufacture-rate
-1
+10
 200
-100.0
-1
+30.0
+10
 1
 items per tick
 HORIZONTAL
@@ -1616,9 +1617,9 @@ SLIDER
 patient-capacity
 patient-capacity
 10
-100
-100.0
-1
+200
+200.0
+10
 1
 patients
 HORIZONTAL
@@ -1632,7 +1633,7 @@ ppe-capacity
 ppe-capacity
 100
 1000
-900.0
+500.0
 100
 1
 PPEs
@@ -1647,7 +1648,7 @@ mask-capacity
 mask-capacity
 100
 5000
-5000.0
+600.0
 100
 1
 masks
@@ -1662,7 +1663,7 @@ glove-capacity
 glove-capacity
 100
 1000
-1000.0
+500.0
 100
 1
 gloves
@@ -1677,7 +1678,7 @@ syringe-capacity
 syringe-capacity
 100
 1000
-700.0
+200.0
 100
 1
 syringes
@@ -1712,8 +1713,8 @@ load-capacity
 load-capacity
 100
 1000
-1000.0
-1
+300.0
+100
 1
 per item
 HORIZONTAL
@@ -1737,7 +1738,7 @@ initial-health
 initial-health
 0
 100
-60.0
+10.0
 1
 1
 NIL
@@ -1835,8 +1836,8 @@ manufacturer-raw-capacity
 manufacturer-raw-capacity
 100
 1000
-1000.0
-1
+500.0
+100
 1
 NIL
 HORIZONTAL
@@ -2017,7 +2018,7 @@ reroute-threshold
 reroute-threshold
 0
 1
-0.75
+0.35
 0.05
 1
 NIL
@@ -2084,7 +2085,7 @@ initial-count
 initial-count
 0
 100
-47.0
+100.0
 1
 1
 patients
@@ -2248,7 +2249,7 @@ Circle -7500403 false true 174 234 42
 Circle -7500403 false true 174 114 42
 Circle -7500403 false true 174 24 42
 @#$#@#$#@
-NetLogo 6.1.1
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
