@@ -2093,15 +2093,33 @@ HORIZONTAL
 @#$#@#$#@
 ## WHAT IS IT?
 
-(a general understanding of what the model is trying to show or explain)
+A supply chain is a network of entities that collaborate to generate goods or services from a set of basic materials and distribute them to a client or consumer. In essence, a supply chain is the entire process of generating a finished product and delivering it to a client. Obtaining raw resources, refining the materials, developing a product using the refined resources, and delivering the finished product to the consumer are all part of this process. 
 
 ## HOW IT WORKS
 
-(what rules the agents use to create the overall behavior of the model)
+Extractors
+
+Responsible for gathering raw materials from a certain place and delivering them to manufacturers via delivery vehicles. Move across the grid in search of an extraction region. Extracts four raw materials at each time step, with the extraction rate varying with each step.
+
+Manufacturers
+
+Produces items for use in hospitals from raw materials extracted by extractors. Stationary in one grid location. They make the goods based on the materials that are available, the production pace, and the raw materials given by the transporters from the extractors at each time step. 
+
+Hospitals
+
+Provides medical care to patients by utilizing items designed by the producers. Stationary in one grid location. They treat patients at each time step using the products brought by the transporters from the manufacturers.  
+
+Patients
+
+People who require medical attention and are admitted to hospitals. In the supply chain, they are regarded as the final user of the finished product. When admitted, stationary agents are stationed within the hospital. They consume medical supplies to stay alive and are discharged from the hospital if a particular health criterion is met. Patients who are unable to be admitted due to the hospital's full capacity might try to visit other facilities to see if there is a free capacity where they can be admitted.
+
+Transporters
+
+Vehicles entrusted with transporting raw materials from Extractors to Manufacturers or from Manufacturers to Hospitals. There are two kinds of transporters: those for extractors and those for hospitals. They are initially based at the manufacturer's facility. They move and convey the load from extractors to manufacturers or manufacturers to hospitals at each time step.  
 
 ## HOW TO USE IT
 
-(how to use the model, including a description of each of the items in the Interface tab)
+Certain sliders must be set before proceeding. These variables dictate how many 'trucks' there are, the load capacity of each truck/transporter, and their reroute threshold for Transporters. A transporter with a higher load capacity can carry more things. Extractors must also have their maximum capacity and extraction rate adjusted. This influences the amount of raw materials they can collect and store on themselves per time step. The maximum capacity for medical equipment as well as the maximum number of patients that can be admitted must be configured. This will have an impact on how much medical equipment a hospital can handle as well as how patients interact with it. Maximum product and raw capacity of manufacturers must be configured. These are the maximum quantities of finished medical items and raw materials that they can hold at any given moment. Lower starting health indicates a more serious epidemic and will necessitate a lengthier hospital stay. A lower first [patient] count indicates that the illness is not prevalent at first.      
 
 ## THINGS TO NOTICE
 
@@ -2109,7 +2127,16 @@ HORIZONTAL
 
 ## THINGS TO TRY
 
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
+Consider the following scenario: a catastrophic epidemic with widespread infection.
+It's worth noting that each simulation took 10000 time steps. 
+
+Severe epidemic and widespread infection 
+(initial-health = 30; initial-count = 90)
+
+It is clear that as the number of patient deaths rises, so does the availability of masks (in red line). In this simulation, hospitals can only carry 1000 masks, which is insufficient to handle the enormous influx of patients. In this simulation, the other medical equipment is insignificant because only the mask supplies are directly related to the patient discharge/mortality rate.
+
+
+If the hospital mask capacity is increased to, say, 2500, the results change dramatically. This is located in number two. 
 
 ## EXTENDING THE MODEL
 
@@ -2248,7 +2275,7 @@ Circle -7500403 false true 174 234 42
 Circle -7500403 false true 174 114 42
 Circle -7500403 false true 174 24 42
 @#$#@#$#@
-NetLogo 6.1.1
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
