@@ -379,7 +379,7 @@ to patient-move foreach sort patients [p ->
 
         set shape "circle"
         ; only do the logic below if the patient is not yet admitted (color != green)
-        ifelse (color != green)
+        ifelse (color != green and color != magenta and color != violet)
         [
          ;set color orange
 
@@ -405,9 +405,9 @@ to patient-move foreach sort patients [p ->
             ; else reroute the patient to another hospital
             ask p
             [
-              set color orange
+
               ; only reroute the patients that are not healing
-              if(color != green)
+              if (color != green and color != magenta and color != violet)
               [
                 ; try to reroute even if the other hospital is full,
 
@@ -511,6 +511,8 @@ to patient-move foreach sort patients [p ->
     ]
 
     [
+      set health health - 1
+      death
       rotate-moving-patient
       forward 1
       display
@@ -1553,7 +1555,7 @@ extraction-rate-prob
 extraction-rate-prob
 2
 100
-9.0
+10.0
 1
 1
 per item
@@ -1593,7 +1595,7 @@ manufacture-rate
 manufacture-rate
 10
 200
-30.0
+20.0
 10
 1
 items per tick
@@ -1618,7 +1620,7 @@ patient-capacity
 patient-capacity
 10
 200
-200.0
+60.0
 10
 1
 patients
@@ -1648,7 +1650,7 @@ mask-capacity
 mask-capacity
 100
 5000
-600.0
+1300.0
 100
 1
 masks
@@ -2085,7 +2087,7 @@ initial-count
 initial-count
 0
 100
-100.0
+64.0
 1
 1
 patients
