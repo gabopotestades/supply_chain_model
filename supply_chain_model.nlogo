@@ -379,12 +379,8 @@ to patient-move foreach sort patients [p ->
 
         set shape "circle"
         ; only do the logic below if the patient is not yet admitted (color != green)
-        ifelse (color != green and color != magenta and color != violet)
+        ifelse (color != green)
         [
-         ;set color orange
-
-        ; hide the turtle
-        ; hide-turtle
 
         ; increment patient count in the hospital if the patient is already in the hospital
         ask hospital hosp_number
@@ -392,12 +388,12 @@ to patient-move foreach sort patients [p ->
           ; if there is a slot in the current hospital, admit self
           ifelse ((patient_count + 1) <= patient-capacity)
           [
-            ; print "admitting patient"
+            print "admitting self"
             set patient_count patient_count + 1
             set syringe_stock syringe_stock - 1 ; decrement dextrose on patient admission
             ask p [
               set color green
-              hide-turtle
+              ;hide-turtle
               set size 1
             ]
           ]
@@ -407,9 +403,9 @@ to patient-move foreach sort patients [p ->
             [
 
               ; only reroute the patients that are not healing
-              if (color != green and color != magenta and color != violet)
+              if (color != green)
               [
-                ; try to reroute even if the other hospital is full,
+                ; try to reroute even if the other hospital is full, there might be a slot when we  get there
 
                 ; Change the start_patch and destination
                 ; To be used for rotation when rerouting
@@ -510,7 +506,7 @@ to patient-move foreach sort patients [p ->
 
     [
       set health health - 1
-      death
+      death ; patient died on the road
       rotate-moving-patient
       forward 1
       display
@@ -1738,7 +1734,7 @@ initial-health
 initial-health
 0
 100
-20.0
+25.0
 1
 1
 NIL
