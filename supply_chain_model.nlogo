@@ -394,6 +394,7 @@ to patient-move foreach sort patients [p ->
           [
             ; print "admitting patient"
             set patient_count patient_count + 1
+            set syringe_stock syringe_stock - 1 ; decrement dextrose on patient admission
             ask p [
               set color green
               hide-turtle
@@ -490,7 +491,7 @@ to patient-move foreach sort patients [p ->
             [
               ;print "admitted but no stock of medical equipment. decreasing health"
               set color orange
-
+              ; wait to die here instead
 
               set health health - 1
               death
@@ -1390,6 +1391,24 @@ to manufacture ; manufacturer procedure
 
 end
 
+; decrement ppe on every fixed interval
+; decrement gloves on every fixed interval, but lower interval than ppe
+to hospital-decrement-ppe foreach sort hospitals [h ->
+  ; fixed interval
+  if ticks mod 42 = 0
+  [
+    ask h
+    [
+      print "decrementing ppe and glove stock"
+      ; randomize the 0.25 multiplier
+      set ppe_stock (ppe_stock - patient-capacity * 0.25)
+      set glove_stock (ppe_stock - patient-capacity * 0.25)
+    ]
+  ]
+]
+end
+
+
 to discharge
   set cured-patients cured-patients + 1
 end
@@ -1425,7 +1444,7 @@ to go
   ; Patient procedures
   patient-move
   spawn-patient
-
+  hospital-decrement-ppe
   tick
 
 end
@@ -2219,7 +2238,7 @@ Circle -7500403 false true 174 234 42
 Circle -7500403 false true 174 114 42
 Circle -7500403 false true 174 24 42
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.1.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
