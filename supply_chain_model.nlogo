@@ -445,8 +445,6 @@ to patient-move foreach sort patients [p ->
               ]
             ]
           ]
-
-
       ]
       [
         ; these agents are already at the hospital but there is a chance that they are not yet admitted
@@ -490,7 +488,7 @@ to patient-move foreach sort patients [p ->
             ask p
             [
               ;print "admitted but no stock of medical equipment. decreasing health"
-              set color orange
+              ; set color orange
               ; wait to die here instead
 
               set health health - 1
@@ -1620,7 +1618,7 @@ patient-capacity
 patient-capacity
 10
 200
-60.0
+20.0
 10
 1
 patients
@@ -1740,28 +1738,11 @@ initial-health
 initial-health
 0
 100
-10.0
+20.0
 1
 1
 NIL
 HORIZONTAL
-
-BUTTON
-585
-496
-648
-529
-Go
-go
-T
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
 
 MONITOR
 1515
@@ -2087,11 +2068,28 @@ initial-count
 initial-count
 0
 100
-64.0
+50.0
 1
 1
 patients
 HORIZONTAL
+
+BUTTON
+585
+496
+648
+529
+Go
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -2251,7 +2249,7 @@ Circle -7500403 false true 174 234 42
 Circle -7500403 false true 174 114 42
 Circle -7500403 false true 174 24 42
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.1.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
