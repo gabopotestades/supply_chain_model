@@ -1333,13 +1333,18 @@ to manufacture ; manufacturer procedure
   ask manufacturers
   [
 
+    let glove_random random manufacture-rate
+    let ppe_random random manufacture-rate
+    let mask_random random manufacture-rate
+    let syringe_random random manufacture-rate
+
     if ; Create a pair of gloves
     raw_material_1_count >= 1 and
     raw_material_2_count >= 1 and
     raw_material_3_count >= 1 and
     raw_material_4_count >= 1
     [
-      set glove_stock (glove_stock + 1)
+      set glove_stock (glove_stock + glove_random)
       set raw_material_1_count ( raw_material_1_count - 1 )
       set raw_material_2_count ( raw_material_2_count - 1 )
       set raw_material_3_count ( raw_material_3_count - 1 )
@@ -1352,7 +1357,7 @@ to manufacture ; manufacturer procedure
     raw_material_3_count >= 1 and
     raw_material_4_count >= 1
     [
-      set ppe_stock (ppe_stock + 1)
+      set ppe_stock (ppe_stock + ppe_random)
       set raw_material_1_count ( raw_material_1_count - 1 )
       set raw_material_2_count ( raw_material_2_count - 1 )
       set raw_material_3_count ( raw_material_3_count - 1 )
@@ -1365,7 +1370,7 @@ to manufacture ; manufacturer procedure
     raw_material_3_count >= 1 and
     raw_material_4_count >= 1
     [
-      set mask_stock (mask_stock + 1)
+      set mask_stock (mask_stock + mask_random)
       set raw_material_1_count ( raw_material_1_count - 1 )
       set raw_material_2_count ( raw_material_2_count - 1 )
       set raw_material_3_count ( raw_material_3_count - 1 )
@@ -1379,7 +1384,7 @@ to manufacture ; manufacturer procedure
     raw_material_3_count >= 1 and
     raw_material_4_count >= 1
     [
-      set syringe_stock (syringe_stock + 1)
+      set syringe_stock (syringe_stock + syringe_random)
       set raw_material_1_count ( raw_material_1_count - 1 )
       set raw_material_2_count ( raw_material_2_count - 1 )
       set raw_material_3_count ( raw_material_3_count - 1 )
@@ -1523,7 +1528,7 @@ extraction-rate-prob
 extraction-rate-prob
 2
 100
-100.0
+50.0
 1
 1
 per item
@@ -1563,10 +1568,10 @@ manufacture-rate
 manufacture-rate
 1
 100
-100.0
+50.0
 1
 1
-items per tick
+per item
 HORIZONTAL
 
 TEXTBOX
@@ -1603,7 +1608,7 @@ ppe-capacity
 ppe-capacity
 100
 1000
-900.0
+1000.0
 100
 1
 PPEs
@@ -1618,7 +1623,7 @@ mask-capacity
 mask-capacity
 100
 1000
-800.0
+1000.0
 100
 1
 masks
@@ -1648,7 +1653,7 @@ syringe-capacity
 syringe-capacity
 100
 1000
-700.0
+1000.0
 100
 1
 syringes
@@ -1708,7 +1713,7 @@ initial-health
 initial-health
 0
 100
-41.0
+48.0
 1
 1
 NIL
