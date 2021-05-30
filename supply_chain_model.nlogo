@@ -1734,7 +1734,7 @@ initial-health
 initial-health
 0
 100
-25.0
+50.0
 1
 1
 NIL
@@ -2064,7 +2064,7 @@ initial-count
 initial-count
 0
 100
-50.0
+70.0
 1
 1
 patients
