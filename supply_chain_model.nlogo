@@ -1390,7 +1390,7 @@ to manufacture ; manufacturer procedure
       set raw_material_4_count ( raw_material_4_count - 1 )
     ]
 
-    ; If the current count is greater than manufacturer-product-capacity, then limit to the capacity
+    ; If the current count is greater than manufacturer-product-capacity, then limit products to the capacity
     if glove_stock > manufacturer-product-capacity [set glove_stock manufacturer-product-capacity]
     if ppe_stock > manufacturer-product-capacity [set ppe_stock manufacturer-product-capacity]
     if mask_stock > manufacturer-product-capacity [set mask_stock manufacturer-product-capacity]
@@ -1493,7 +1493,7 @@ transporter-multiplier
 transporter-multiplier
 1
 10
-2.0
+6.0
 1
 1
 NIL
@@ -1557,8 +1557,8 @@ SLIDER
 manufacturer-product-capacity
 manufacturer-product-capacity
 10
-1000
-400.0
+5000
+5000.0
 10
 1
 items
@@ -1572,8 +1572,8 @@ SLIDER
 manufacture-rate
 manufacture-rate
 1
-100
-11.0
+200
+100.0
 1
 1
 items per tick
@@ -1627,8 +1627,8 @@ SLIDER
 mask-capacity
 mask-capacity
 100
-1000
-400.0
+5000
+5000.0
 100
 1
 masks
@@ -1718,7 +1718,7 @@ initial-health
 initial-health
 0
 100
-10.0
+60.0
 1
 1
 NIL
@@ -1998,7 +1998,7 @@ reroute-threshold
 reroute-threshold
 0
 1
-0.4
+0.75
 0.05
 1
 NIL
