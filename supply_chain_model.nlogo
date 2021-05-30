@@ -473,10 +473,10 @@ to patient-move foreach sort patients [p ->
                   ; decrement hospital stock at each time step for each patient
                   ask hospital hosp_number
                   [
-                    set glove_stock glove_stock - 1
-                    set ppe_stock ppe_stock - 1
+                    ; set glove_stock glove_stock - 1
+                    ; set ppe_stock ppe_stock - 1
                     set mask_stock mask_stock - 1
-                    set syringe_stock syringe_stock - 1
+                    ; set syringe_stock syringe_stock - 1
                   ]
                   ; and heal the patient
                   ; print "HEALING THE PATIENT"
