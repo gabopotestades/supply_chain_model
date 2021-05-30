@@ -21,7 +21,6 @@ breed [patients patient]
 
 ; Initialize internal values per breed
 extr-transporters-own[
-  delivery_speed
   raw_material_1_count
   raw_material_2_count
   raw_material_3_count
@@ -31,7 +30,6 @@ extr-transporters-own[
   destination_type
 ]
 hosp-transporters-own[
-  delivery_speed
   glove_stock
   ppe_stock
   mask_stock
@@ -48,7 +46,6 @@ extractors-own[
   raw_material_4_count
 ]
 manufacturers-own[
-  warehouse_capacity
   raw_material_1_count
   raw_material_2_count
   raw_material_3_count
@@ -399,6 +396,7 @@ to patient-move foreach sort patients [p ->
             set patient_count patient_count + 1
             ask p [
               set color green
+              hide-turtle
               set size 1
             ]
           ]
@@ -418,11 +416,13 @@ to patient-move foreach sort patients [p ->
                 [
                   set start_patch patch 30 3
                   set destination patch 20 -13
+                  set color violet
 
                 ]
                 [
                   set start_patch patch 30 -13
                   set destination patch 20 3
+                  set color magenta
                 ]
                 ; Set different visuals to discern
                 ; if the patient is rerouting
@@ -433,8 +433,8 @@ to patient-move foreach sort patients [p ->
                       set patient_count patient_count - 1
                     ]
                   show-turtle
-                  set color pink ; lol
                   set shape "square"
+                  show-turtle
                   rt 180
                   ; add the chance that the patient will die in transport
                   set health health - 1
@@ -1501,9 +1501,9 @@ will be multiplied to 2
 
 SLIDER
 10
-142
+176
 230
-175
+209
 extractor-capacity
 extractor-capacity
 100
@@ -1516,9 +1516,9 @@ HORIZONTAL
 
 SLIDER
 10
-181
+215
 230
-214
+248
 extraction-rate-prob
 extraction-rate-prob
 2
@@ -1531,9 +1531,9 @@ HORIZONTAL
 
 TEXTBOX
 15
-126
+160
 165
-144
+178
 Extractor variables
 11
 0.0
@@ -1581,9 +1581,9 @@ Manufacturer variables
 
 SLIDER
 9
-241
+275
 229
-274
+308
 patient-capacity
 patient-capacity
 10
@@ -1596,9 +1596,9 @@ HORIZONTAL
 
 SLIDER
 9
-329
+363
 232
-362
+396
 ppe-capacity
 ppe-capacity
 100
@@ -1611,9 +1611,9 @@ HORIZONTAL
 
 SLIDER
 12
-372
+406
 232
-405
+439
 mask-capacity
 mask-capacity
 100
@@ -1626,9 +1626,9 @@ HORIZONTAL
 
 SLIDER
 9
-286
+320
 233
-319
+353
 glove-capacity
 glove-capacity
 100
@@ -1641,9 +1641,9 @@ HORIZONTAL
 
 SLIDER
 11
-415
+449
 232
-448
+482
 syringe-capacity
 syringe-capacity
 100
@@ -1656,9 +1656,9 @@ HORIZONTAL
 
 TEXTBOX
 15
-223
+257
 165
-241
+275
 Hospital variables
 11
 0.0
@@ -1708,7 +1708,7 @@ initial-health
 initial-health
 0
 100
-41.0
+42.0
 1
 1
 NIL
@@ -1980,10 +1980,10 @@ PENS
 "Discharged" 1.0 0 -14439633 true "" "plot cured-patients"
 
 SLIDER
-261
-280
-487
-313
+10
+121
+230
+154
 reroute-threshold
 reroute-threshold
 0
@@ -2032,8 +2032,8 @@ true
 true
 "" ""
 PENS
-"default" 1.0 0 -14439633 true "" "plot [patient_count] of hospital 4"
-"pen-1" 1.0 0 -12345184 true "" "plot [patient_count] of hospital 5"
+"Hospital 1" 1.0 0 -14439633 true "" "plot [patient_count] of hospital 4"
+"Hospital 2" 1.0 0 -12345184 true "" "plot [patient_count] of hospital 5"
 
 MONITOR
 762
@@ -2047,10 +2047,10 @@ Total Patients
 11
 
 SLIDER
-268
-230
-440
-263
+264
+223
+492
+256
 initial-count
 initial-count
 0
