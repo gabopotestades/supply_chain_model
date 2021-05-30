@@ -1328,8 +1328,12 @@ end
 ; depending on the available raw materials
 to manufacture ; manufacturer procedure
 
-  ; Not yet using manufacturing rate
-  ; Also used random counts for creating a product
+  ; manufacturing rate
+  ; used to random counts in creating a product
+  let glove_random random manufacture-rate
+  let ppe_random random manufacture-rate
+  let mask_random random manufacture-rate
+  let syringe_random random manufacture-rate
 
   ask manufacturers
   [
@@ -1340,7 +1344,7 @@ to manufacture ; manufacturer procedure
     raw_material_3_count >= 1 and
     raw_material_4_count >= 1
     [
-      set glove_stock (glove_stock + 1)
+      set glove_stock (glove_stock + glove_random)
       set raw_material_1_count ( raw_material_1_count - 1 )
       set raw_material_2_count ( raw_material_2_count - 1 )
       set raw_material_3_count ( raw_material_3_count - 1 )
@@ -1353,7 +1357,7 @@ to manufacture ; manufacturer procedure
     raw_material_3_count >= 1 and
     raw_material_4_count >= 1
     [
-      set ppe_stock (ppe_stock + 1)
+      set ppe_stock (ppe_stock + ppe_random)
       set raw_material_1_count ( raw_material_1_count - 1 )
       set raw_material_2_count ( raw_material_2_count - 1 )
       set raw_material_3_count ( raw_material_3_count - 1 )
@@ -1366,7 +1370,7 @@ to manufacture ; manufacturer procedure
     raw_material_3_count >= 1 and
     raw_material_4_count >= 1
     [
-      set mask_stock (mask_stock + 1)
+      set mask_stock (mask_stock + mask_random)
       set raw_material_1_count ( raw_material_1_count - 1 )
       set raw_material_2_count ( raw_material_2_count - 1 )
       set raw_material_3_count ( raw_material_3_count - 1 )
@@ -1380,12 +1384,18 @@ to manufacture ; manufacturer procedure
     raw_material_3_count >= 1 and
     raw_material_4_count >= 1
     [
-      set syringe_stock (syringe_stock + 1)
+      set syringe_stock (syringe_stock + syringe_random)
       set raw_material_1_count ( raw_material_1_count - 1 )
       set raw_material_2_count ( raw_material_2_count - 1 )
       set raw_material_3_count ( raw_material_3_count - 1 )
       set raw_material_4_count ( raw_material_4_count - 1 )
     ]
+
+    ; If the current count is greater than manufacturer-product-capacity, then limit products to the capacity
+    if glove_stock > manufacturer-product-capacity [set glove_stock manufacturer-product-capacity]
+    if ppe_stock > manufacturer-product-capacity [set ppe_stock manufacturer-product-capacity]
+    if mask_stock > manufacturer-product-capacity [set mask_stock manufacturer-product-capacity]
+    if syringe_stock > manufacturer-product-capacity [set syringe_stock manufacturer-product-capacity]
 
   ]
 
@@ -1502,7 +1512,7 @@ transporter-multiplier
 transporter-multiplier
 1
 10
-2.0
+6.0
 1
 1
 NIL
@@ -1565,10 +1575,10 @@ SLIDER
 58
 manufacturer-product-capacity
 manufacturer-product-capacity
-100
-1000
-1000.0
-100
+10
+5000
+5000.0
+10
 1
 items
 HORIZONTAL
@@ -1581,7 +1591,7 @@ SLIDER
 manufacture-rate
 manufacture-rate
 1
-100
+200
 100.0
 1
 1
@@ -1636,8 +1646,8 @@ SLIDER
 mask-capacity
 mask-capacity
 100
-1000
-800.0
+5000
+5000.0
 100
 1
 masks
@@ -1727,7 +1737,7 @@ initial-health
 initial-health
 0
 100
-42.0
+60.0
 1
 1
 NIL
@@ -2007,17 +2017,17 @@ reroute-threshold
 reroute-threshold
 0
 1
-0.4
+0.75
 0.05
 1
 NIL
 HORIZONTAL
 
 MONITOR
-761
-571
-885
-616
+713
+573
+837
+618
 Discharged Patients
 cured-patients
 17
@@ -2025,10 +2035,10 @@ cured-patients
 11
 
 MONITOR
-762
-622
-885
-667
+714
+624
+837
+669
 Dead Patients
 dead-patients
 17
@@ -2055,11 +2065,11 @@ PENS
 "Hospital 2" 1.0 0 -12345184 true "" "plot [patient_count] of hospital 5"
 
 MONITOR
-762
-518
-888
-563
-Total Patients
+714
+520
+872
+565
+Total Patients Hospitalized
 [patient_count] of hospital 4 + [patient_count] of hospital 5
 17
 1
@@ -2074,7 +2084,7 @@ initial-count
 initial-count
 0
 100
-50.0
+47.0
 1
 1
 patients
