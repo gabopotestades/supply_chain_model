@@ -388,9 +388,11 @@ to patient-move foreach sort patients [p ->
           ; if there is a slot in the current hospital, admit self
           ifelse ((patient_count + 1) <= patient-capacity)
           [
-            print "admitting self"
+            ; print "admitting self"
             set patient_count patient_count + 1
-            set syringe_stock syringe_stock - 1 ; decrement dextrose on patient admission
+            if  syringe_stock >  0
+             [  set syringe_stock syringe_stock - 1 ]  ; decrement dextrose on patient admission
+            ; set syringe_stock syringe_stock - 1
             ask p [
               set color green
               ;hide-turtle
@@ -447,7 +449,7 @@ to patient-move foreach sort patients [p ->
         ask hospital hosp_number
         [
           ; further check if there are stocks
-          ifelse(mask_stock > 0)
+          ifelse(mask_stock > 0 and syringe_stock > 0 and ppe_stock > 0 and glove_stock > 0)
             [
               ask p
               [
@@ -471,7 +473,9 @@ to patient-move foreach sort patients [p ->
                     ; set glove_stock glove_stock - 1
                     ; set ppe_stock ppe_stock - 1
                     set mask_stock mask_stock - 1
-                    ; set syringe_stock syringe_stock - 1
+
+                    if ticks mod 10 = 0 and syringe_stock > 0
+                    [  set syringe_stock syringe_stock - 1 ]
                   ]
                   ; and heal the patient
                   ; print "HEALING THE PATIENT"
@@ -505,7 +509,7 @@ to patient-move foreach sort patients [p ->
     ]
 
     [
-      set health health - 1
+      set health health - 0.5
       death ; patient died on the road
       rotate-moving-patient
       forward 1
@@ -1147,8 +1151,8 @@ to hospital-transport ; hospital transporter procedure
           set start_patch (patch-here)
 
           ; If there are remaining cargo, reroute
-          ; ifelse remaining_stocks > ((load-capacity * 4) * reroute-threshold) [
-          ifelse mask_stock > mask_stock * reroute-threshold [
+          ;  ifelse mask_stock > mask_stock * reroute-threshold [
+          ifelse remaining_stocks > ((load-capacity * 4) * reroute-threshold) and (glove_stock > 0 and ppe_stock > 0 and mask_stock > 0 and syringe_stock > 0) [
             set destination_type "reroute"
             ifelse [pycor] of patch-here = 3
             [ set destination patch 20 -13 ]
@@ -1251,9 +1255,23 @@ to hospital-transport ; hospital transporter procedure
           set syringe_stock  (cur_syringe_stock)
 
           ; Switch start patch and destination patch
-          let temp_dest (destination)
-          set destination (start_patch)
-          set start_patch (temp_dest)
+
+          let hospital4_stocks 0
+          let hospital5_stocks 0
+
+            ask hospital 4
+            [ set hospital4_stocks (glove_stock + ppe_stock + mask_stock + syringe_stock) ]
+
+            ask hospital 5
+            [ set hospital5_stocks (glove_stock + ppe_stock + mask_stock + syringe_stock) ]
+
+          set start_patch (destination)
+
+            ; Check which factory has more stocks
+            ifelse hospital4_stocks > hospital5_stocks
+            [ set destination patch 20 -13 ]
+            [ set destination patch 20   3 ]
+
 
         ]
 
@@ -1329,36 +1347,36 @@ to manufacture ; manufacturer procedure
   ; used to random counts in creating a product
   let glove_random random manufacture-rate
   let ppe_random random manufacture-rate
-  let mask_random random manufacture-rate
+  let mask_random manufacture-rate
   let syringe_random random manufacture-rate
 
   ask manufacturers
   [
 
     if ; Create a pair of gloves
-    raw_material_1_count >= 1 and
-    raw_material_2_count >= 1 and
-    raw_material_3_count >= 1 and
-    raw_material_4_count >= 1
+    raw_material_1_count >= glove_random and
+    raw_material_2_count >= glove_random and
+    raw_material_3_count >= glove_random and
+    raw_material_4_count >= glove_random
     [
       set glove_stock (glove_stock + glove_random)
-      set raw_material_1_count ( raw_material_1_count - 1 )
-      set raw_material_2_count ( raw_material_2_count - 1 )
-      set raw_material_3_count ( raw_material_3_count - 1 )
-      set raw_material_4_count ( raw_material_4_count - 1 )
+      set raw_material_1_count ( raw_material_1_count - glove_random )
+      set raw_material_2_count ( raw_material_2_count - glove_random )
+      set raw_material_3_count ( raw_material_3_count - glove_random )
+      set raw_material_4_count ( raw_material_4_count - glove_random )
     ]
 
     if ; Create a PPE
-    raw_material_1_count >= 1 and
-    raw_material_2_count >= 1 and
-    raw_material_3_count >= 1 and
-    raw_material_4_count >= 1
+    raw_material_1_count >= ppe_random and
+    raw_material_2_count >= ppe_random and
+    raw_material_3_count >= ppe_random and
+    raw_material_4_count >= ppe_random
     [
       set ppe_stock (ppe_stock + ppe_random)
-      set raw_material_1_count ( raw_material_1_count - 1 )
-      set raw_material_2_count ( raw_material_2_count - 1 )
-      set raw_material_3_count ( raw_material_3_count - 1 )
-      set raw_material_4_count ( raw_material_4_count - 1 )
+      set raw_material_1_count ( raw_material_1_count - ppe_random )
+      set raw_material_2_count ( raw_material_2_count - ppe_random )
+      set raw_material_3_count ( raw_material_3_count - ppe_random )
+      set raw_material_4_count ( raw_material_4_count - ppe_random )
     ]
 
     if ; Create a mask
@@ -1368,24 +1386,24 @@ to manufacture ; manufacturer procedure
     raw_material_4_count >= 1
     [
       set mask_stock (mask_stock + mask_random)
-      set raw_material_1_count ( raw_material_1_count - 1 )
-      set raw_material_2_count ( raw_material_2_count - 1 )
-      set raw_material_3_count ( raw_material_3_count - 1 )
-      set raw_material_4_count ( raw_material_4_count - 1 )
+      set raw_material_1_count ( raw_material_1_count - mask_random )
+      set raw_material_2_count ( raw_material_2_count - mask_random )
+      set raw_material_3_count ( raw_material_3_count - mask_random )
+      set raw_material_4_count ( raw_material_4_count - mask_random )
     ]
 
 
     if ; Create a syringe
-    raw_material_1_count >= 1 and
-    raw_material_2_count >= 1 and
-    raw_material_3_count >= 1 and
-    raw_material_4_count >= 1
+    raw_material_1_count >= syringe_random and
+    raw_material_2_count >= syringe_random and
+    raw_material_3_count >= syringe_random and
+    raw_material_4_count >= syringe_random
     [
       set syringe_stock (syringe_stock + syringe_random)
-      set raw_material_1_count ( raw_material_1_count - 1 )
-      set raw_material_2_count ( raw_material_2_count - 1 )
-      set raw_material_3_count ( raw_material_3_count - 1 )
-      set raw_material_4_count ( raw_material_4_count - 1 )
+      set raw_material_1_count ( raw_material_1_count - syringe_random )
+      set raw_material_2_count ( raw_material_2_count - syringe_random )
+      set raw_material_3_count ( raw_material_3_count - syringe_random )
+      set raw_material_4_count ( raw_material_4_count - syringe_random )
     ]
 
     ; If the current count is greater than manufacturer-product-capacity, then limit products to the capacity
@@ -1402,14 +1420,29 @@ end
 ; decrement gloves on every fixed interval, but lower interval than ppe
 to hospital-decrement-ppe foreach sort hospitals [h ->
   ; fixed interval
-  if ticks mod 47 = 0
+  if ticks mod 23 = 0
   [
     ask h
     [
-      print "decrementing ppe and glove stock"
+     ;  print "decrementing ppe and glove stock"
       ; randomize the 0.25 multiplier
-      set ppe_stock (ppe_stock - patient-capacity * 0.25)
-      set glove_stock (ppe_stock - patient-capacity * 0.25)
+
+      ifelse ppe_stock < (patient-capacity * 0.25)
+      [
+       set ppe_stock 0
+      ]
+      [
+       set ppe_stock (patient-capacity * 0.25)
+      ]
+
+      ifelse glove_stock < (patient-capacity * 0.25)
+      [
+       set glove_stock 0
+      ]
+      [
+       set glove_stock (patient-capacity * 0.25)
+      ]
+
     ]
   ]
 ]
@@ -1484,9 +1517,9 @@ ticks
 30.0
 
 BUTTON
-509
+510
 496
-573
+574
 529
 Setup
 setup
@@ -1534,7 +1567,7 @@ extractor-capacity
 extractor-capacity
 100
 1000
-100.0
+400.0
 100
 1
 per item
@@ -1547,10 +1580,10 @@ SLIDER
 248
 extraction-rate-prob
 extraction-rate-prob
-2
+5
 100
-10.0
-1
+15.0
+5
 1
 per item
 HORIZONTAL
@@ -1574,7 +1607,7 @@ manufacturer-product-capacity
 manufacturer-product-capacity
 100
 5000
-2300.0
+4100.0
 100
 1
 items
@@ -1589,7 +1622,7 @@ manufacture-rate
 manufacture-rate
 10
 200
-20.0
+30.0
 10
 1
 items per tick
@@ -1613,8 +1646,8 @@ SLIDER
 patient-capacity
 patient-capacity
 10
-200
-20.0
+300
+140.0
 10
 1
 patients
@@ -1629,7 +1662,7 @@ ppe-capacity
 ppe-capacity
 100
 1000
-500.0
+600.0
 100
 1
 PPEs
@@ -1643,9 +1676,9 @@ SLIDER
 mask-capacity
 mask-capacity
 100
-5000
-1300.0
-100
+10000
+7600.0
+500
 1
 masks
 HORIZONTAL
@@ -1659,7 +1692,7 @@ glove-capacity
 glove-capacity
 100
 1000
-500.0
+700.0
 100
 1
 gloves
@@ -1674,7 +1707,7 @@ syringe-capacity
 syringe-capacity
 100
 1000
-200.0
+600.0
 100
 1
 syringes
@@ -1709,7 +1742,7 @@ load-capacity
 load-capacity
 100
 1000
-300.0
+1000.0
 100
 1
 per item
@@ -1734,29 +1767,29 @@ initial-health
 initial-health
 0
 100
-50.0
+20.0
 1
 1
 NIL
 HORIZONTAL
 
 MONITOR
-1515
-27
-1643
-72
-mask stock of hosp 4
+1542
+28
+1661
+73
+Masks of Hospital 1
 [mask_stock] of hospital 4
 17
 1
 11
 
 MONITOR
-1649
+1667
 28
-1771
+1781
 73
-syringe stock of hosp 4
+Syringe of Hospital 1
 [syringe_stock] of hospital 4
 17
 1
@@ -1765,42 +1798,42 @@ syringe stock of hosp 4
 MONITOR
 1304
 79
-1383
+1427
 124
-gloves hosp 5
+Gloves of Hospital 2
 [glove_stock] of hospital 5
 17
 1
 11
 
 MONITOR
-1388
-78
-1509
-123
-ppe stock of hosp 5
+1432
+79
+1536
+124
+PPE of Hospital 2
 [ppe_stock] of hospital 5
 17
 1
 11
 
 MONITOR
-1516
-80
-1644
-125
-mask stock of hosp 5
+1543
+79
+1661
+124
+Masks of Hospital 2
 [mask_stock] of hospital 5
 17
 1
 11
 
 MONITOR
-1650
-80
-1772
-125
-syringe hosp 5
+1666
+79
+1782
+124
+Syringes of Hospital 2
 [syringe_stock] of hospital 5
 17
 1
@@ -1815,7 +1848,7 @@ manufacturer-raw-capacity
 manufacturer-raw-capacity
 100
 1000
-500.0
+1000.0
 100
 1
 NIL
@@ -1845,20 +1878,20 @@ PENS
 MONITOR
 1304
 28
-1384
+1427
 73
-gloves hosp 4
+Gloves of Hospital 1
 [glove_stock] of hospital 4
 17
 1
 11
 
 MONITOR
-1390
-27
-1509
-72
-ppe stocks of hosp 4
+1431
+28
+1535
+73
+PPE of Hospital 1
 [ ppe_stock ] of hospital 4
 17
 1
@@ -1997,17 +2030,17 @@ reroute-threshold
 reroute-threshold
 0
 1
-0.35
+0.5
 0.05
 1
 NIL
 HORIZONTAL
 
 MONITOR
-713
-573
-837
-618
+763
+567
+887
+612
 Discharged Patients
 cured-patients
 17
@@ -2015,10 +2048,10 @@ cured-patients
 11
 
 MONITOR
-714
-624
-837
-669
+763
+620
+886
+665
 Dead Patients
 dead-patients
 17
@@ -2045,11 +2078,11 @@ PENS
 "Hospital 2" 1.0 0 -12345184 true "" "plot [patient_count] of hospital 5"
 
 MONITOR
-714
-520
-872
-565
-Total Patients Hospitalized
+699
+517
+888
+562
+Total Patients Currently Hospitalized
 [patient_count] of hospital 4 + [patient_count] of hospital 5
 17
 1
@@ -2062,10 +2095,10 @@ SLIDER
 256
 initial-count
 initial-count
-0
+10
 100
-70.0
-1
+30.0
+10
 1
 patients
 HORIZONTAL
@@ -2120,7 +2153,7 @@ Certain sliders must be set before proceeding. These variables dictate how many 
 
 ## THINGS TO NOTICE
 
-(suggested things for the user to notice while running the model)
+The focus of this model is the number of patient deaths. As shown on the bottom graph, a plot of dead and discharged patients as the y coordinate and time steps as the x coordinate.
 
 ## THINGS TO TRY
 
@@ -2137,19 +2170,18 @@ If the hospital mask capacity is increased to, say, 2500, the results change dra
 
 ## EXTENDING THE MODEL
 
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
+The model can be extended by adding different types of ailments per patient and additional medical supplies whose usage varies depending on the patients illness.
 
 ## NETLOGO FEATURES
 
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
+The transporter agents only go forward at each time step. Interestingly, they only change their heading in order to adjust to the road. So intersections are accomodated.
 
 ## RELATED MODELS
+In the model's library under the Social Science folder, there are models that simulate traffic that is similar to the transporters behavior especially the Traffic Grid Model.
 
-(models in the NetLogo Models Library and elsewhere which are of related interest)
 
 ## CREDITS AND REFERENCES
-
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
+We would like to thank Dr. Briane Samson in guiding the progress of this model also and sharing his agent-based model that is slightly related to our model.
 @#$#@#$#@
 default
 true
@@ -2272,7 +2304,7 @@ Circle -7500403 false true 174 234 42
 Circle -7500403 false true 174 114 42
 Circle -7500403 false true 174 24 42
 @#$#@#$#@
-NetLogo 6.1.1
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
