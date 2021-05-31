@@ -1542,7 +1542,7 @@ transporter-multiplier
 transporter-multiplier
 1
 10
-2.0
+3.0
 1
 1
 NIL
@@ -1567,7 +1567,7 @@ extractor-capacity
 extractor-capacity
 100
 1000
-400.0
+600.0
 100
 1
 per item
@@ -1607,7 +1607,7 @@ manufacturer-product-capacity
 manufacturer-product-capacity
 100
 5000
-4100.0
+3000.0
 100
 1
 items
@@ -1622,7 +1622,7 @@ manufacture-rate
 manufacture-rate
 10
 200
-30.0
+60.0
 10
 1
 items per tick
@@ -1647,7 +1647,7 @@ patient-capacity
 patient-capacity
 10
 300
-140.0
+300.0
 10
 1
 patients
@@ -1675,9 +1675,9 @@ SLIDER
 439
 mask-capacity
 mask-capacity
-100
+500
 10000
-7600.0
+10000.0
 500
 1
 masks
@@ -1742,7 +1742,7 @@ load-capacity
 load-capacity
 100
 1000
-1000.0
+500.0
 100
 1
 per item
@@ -1767,7 +1767,7 @@ initial-health
 initial-health
 0
 100
-20.0
+15.0
 1
 1
 NIL
@@ -2097,7 +2097,7 @@ initial-count
 initial-count
 10
 100
-30.0
+70.0
 10
 1
 patients
