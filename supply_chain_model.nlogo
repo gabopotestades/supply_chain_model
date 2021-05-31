@@ -381,10 +381,6 @@ to patient-move foreach sort patients [p ->
         ; only do the logic below if the patient is not yet admitted (color != green)
         ifelse (color != green)
         [
-         ;set color orange
-
-        ; hide the turtle
-        ; hide-turtle
 
         ; increment patient count in the hospital if the patient is already in the hospital
         ask hospital hosp_number
@@ -392,12 +388,12 @@ to patient-move foreach sort patients [p ->
           ; if there is a slot in the current hospital, admit self
           ifelse ((patient_count + 1) <= patient-capacity)
           [
-            ; print "admitting patient"
+            print "admitting self"
             set patient_count patient_count + 1
             set syringe_stock syringe_stock - 1 ; decrement dextrose on patient admission
             ask p [
               set color green
-              hide-turtle
+              ;hide-turtle
               set size 1
             ]
           ]
@@ -405,11 +401,11 @@ to patient-move foreach sort patients [p ->
             ; else reroute the patient to another hospital
             ask p
             [
-              set color orange
+
               ; only reroute the patients that are not healing
-              if(color != green)
+              if (color != green)
               [
-                ; try to reroute even if the other hospital is full,
+                ; try to reroute even if the other hospital is full, there might be a slot when we  get there
 
                 ; Change the start_patch and destination
                 ; To be used for rotation when rerouting
@@ -445,8 +441,6 @@ to patient-move foreach sort patients [p ->
               ]
             ]
           ]
-
-
       ]
       [
         ; these agents are already at the hospital but there is a chance that they are not yet admitted
@@ -490,7 +484,7 @@ to patient-move foreach sort patients [p ->
             ask p
             [
               ;print "admitted but no stock of medical equipment. decreasing health"
-              set color orange
+              ; set color orange
               ; wait to die here instead
 
               set health health - 1
@@ -511,6 +505,8 @@ to patient-move foreach sort patients [p ->
     ]
 
     [
+      set health health - 1
+      death ; patient died on the road
       rotate-moving-patient
       forward 1
       display
@@ -1553,7 +1549,7 @@ extraction-rate-prob
 extraction-rate-prob
 2
 100
-9.0
+10.0
 1
 1
 per item
@@ -1593,7 +1589,7 @@ manufacture-rate
 manufacture-rate
 10
 200
-30.0
+20.0
 10
 1
 items per tick
@@ -1618,7 +1614,7 @@ patient-capacity
 patient-capacity
 10
 200
-200.0
+20.0
 10
 1
 patients
@@ -1648,7 +1644,7 @@ mask-capacity
 mask-capacity
 100
 5000
-600.0
+1300.0
 100
 1
 masks
@@ -1738,28 +1734,11 @@ initial-health
 initial-health
 0
 100
-10.0
+50.0
 1
 1
 NIL
 HORIZONTAL
-
-BUTTON
-585
-496
-648
-529
-Go
-go
-T
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
 
 MONITOR
 1515
@@ -2085,11 +2064,28 @@ initial-count
 initial-count
 0
 100
-100.0
+70.0
 1
 1
 patients
 HORIZONTAL
+
+BUTTON
+585
+496
+648
+529
+Go
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -2276,7 +2272,7 @@ Circle -7500403 false true 174 234 42
 Circle -7500403 false true 174 114 42
 Circle -7500403 false true 174 24 42
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.1.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
